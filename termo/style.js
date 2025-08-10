@@ -1,4 +1,5 @@
 import { StyleSheet } from "react-native";
+import { Modal } from "react-native-web";
 
 export default StyleSheet.create({
 
@@ -34,7 +35,6 @@ export default StyleSheet.create({
     valores:{
         flex:1,
         margin:2,
-        backgroundColor: '#21000f',
         borderRadius:10,
         justifyContent:'center',
         alignItems:'center'
@@ -72,5 +72,9 @@ export default StyleSheet.create({
     },
     itemY:{
         color:'#fff',
+    },
+    modal:{
+        flex:1,
+        backgroundColor:'#00000048'
     },
 })
