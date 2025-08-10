@@ -8,7 +8,7 @@ export default function App() {
   
   const [numCerto,setNumCerto] = useState([1,2,3,4]);
   const [resposta,setResposta] = useState([['','','',''],['','','',''],['','','',''],['','','',''],['','','',''],['','','','']])
-  const [teste,setTeste] = useState(['','','','']);
+  const [teste,setTeste] = useState(['w','w','w','w']);
   const [rodada,setRodada] = useState(0);
   const [posi,setPosi] = useState(0);
   
@@ -34,30 +34,34 @@ export default function App() {
       setPosi(3);
     }
   }
-  const enviarResposta=()=>{
+
+  const Certo=(c,i)=>{
     const newMatriz = [...teste];
+    newMatriz[i] = c;
+    setTeste(newMatriz);
+  }
+
+  const enviarResposta=()=>{
     if(rodada<5){
       setPosi(0);
       setRodada(rodada+1);
       for(let i=0;i<4;i++){
         if(resposta[rodada][i] == numCerto[i]){
-          newMatriz[i] = 1;
+          Certo("c",i);
         }else if(resposta[rodada][i]==(numCerto[0]||numCerto[1]||numCerto[2]||numCerto[3])){
-          newMatriz[i] = 2;
+          
         }else{
-          newMatriz[i] = 0;
+          
         }
       }
+      console.log(teste);
     }
-    setTeste(newMatriz);
   }
-    
   useEffect(() =>{
     /* console.log("Num Certo"+numCerto);
     console.log("Sua resposta: "+resposta);
     console.log("Rodada atual: "+rodada);
     console.log("Posição atual: "+posi); */
-    console.log(teste);
   },
     [numCerto],
     [teste],
