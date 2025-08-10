@@ -4,44 +4,74 @@ import styles from "./style";
 import { useEffect, useState } from 'react';
 
 
-let rodada = 1;
-
 export default function App() {
   
-  const [numCerto,getNumCerto] = useState([9,8,7,6]);
-  const [resposta,getResposta] = useState([['','','',''],['','','',''],['','','',''],['','','',''],['','','',''],['','','','']])
-  const [round,getRound] = useState(rodada);
-  const styleDinamico=(round)=>{
-    switch(round){
-      case 1:
-        return styles.round1;
-      case 2:
-        return styles.round2;
-      case 3:
-        return styles.round3;
-      case 4:
-        return styles.round4;
-      case 5:
-        return styles.round5;
-      case 6:
-        return styles.round6;
+  const [numCerto,setNumCerto] = useState([1,2,3,4]);
+  const [resposta,setResposta] = useState([['','','',''],['','','',''],['','','',''],['','','',''],['','','',''],['','','','']])
+  const [teste,setTeste] = useState(['','','','']);
+  const [rodada,setRodada] = useState(0);
+  const [posi,setPosi] = useState(0);
+  
+  const addNum=(number)=>{
+    const newMatriz = [...resposta];
+    newMatriz[rodada][posi] = number;
+
+    setResposta(newMatriz);
+    if(posi<3){
+      setPosi(posi+1);    
+    }else{
+      setPosi(0);
     }
   }
-  const Espaço = ({ size }) => <View style={{ width: size }} />;
+  const delNum=(apagar)=>{
+    const newMatriz = [...resposta];
+    newMatriz[rodada][posi] = apagar;
 
+    setResposta(newMatriz);
+    if(posi>0){
+      setPosi(posi-1);    
+    }else{
+      setPosi(3);
+    }
+  }
+  const enviarResposta=()=>{
+    const newMatriz = [...teste];
+    if(rodada<5){
+      setPosi(0);
+      setRodada(rodada+1);
+      for(let i=0;i<4;i++){
+        if(resposta[rodada][i] == numCerto[i]){
+          newMatriz[i] = 1;
+        }else if(resposta[rodada][i]==(numCerto[0]||numCerto[1]||numCerto[2]||numCerto[3])){
+          newMatriz[i] = 2;
+        }else{
+          newMatriz[i] = 0;
+        }
+      }
+    }
+    setTeste(newMatriz);
+  }
+    
   useEffect(() =>{
-    console.log(numCerto);
-    console.log(resposta);
+    /* console.log("Num Certo"+numCerto);
+    console.log("Sua resposta: "+resposta);
+    console.log("Rodada atual: "+rodada);
+    console.log("Posição atual: "+posi); */
+    console.log(teste);
   },
     [numCerto],
-    [resposta]
+    [teste],
+    [resposta],
+    [rodada],
+    [posi]
   )
 
+  const Espaço = ({ size }) => <View style={{ width: size }} />;
   const renderValores = () => {
     return resposta.map((linha, index) => (
-      <View key={index} style={[styles.li, styleDinamico(index + 1)]}>
+      <View key={index} style={[styles.li]}>
         {linha.map((valor, subIndex) => (
-          <View key={subIndex} style={[styles.valores, styleDinamico(index + 1)]}>
+          <View key={subIndex} style={[styles.valores]}>
             <Text style={styles.texto}>{valor || ''}</Text>
           </View>
         ))}
@@ -51,6 +81,7 @@ export default function App() {
   return (
     <View style={styles.container}>
       <View style={styles.titulo}><Text style={styles.titu}>Termo Numérico</Text></View>
+
       <View style={styles.campos}>
         {renderValores()}
       </View>
@@ -98,7 +129,7 @@ export default function App() {
           </View>
 
           <View style={styles.linha}>
-            <Pressable style={styles.ordem} onPress={()=> {del()}}>
+            <Pressable style={styles.ordem} onPress={()=> {delNum('')}}>
               <Text style={styles.itemX}>X</Text>
             </Pressable>
             <Espaço size={8}/>
@@ -106,7 +137,7 @@ export default function App() {
               <Text style={styles.item}>0</Text>
             </Pressable>
             <Espaço size={8}/>
-            <Pressable style={styles.ordem} onPress={()=> {calc()}}>
+            <Pressable style={styles.ordem} onPress={()=> {enviarResposta()}}>
               <Text style={styles.itemY}>✓</Text>
             </Pressable>
           </View>
