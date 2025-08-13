@@ -65,16 +65,40 @@ export default StyleSheet.create({
         backgroundColor:'#21000f'
     },
     item:{
+        fontSize:30,
         color:'#fff',
     },
     itemX:{
+        fontSize:30,
         color:'#fff',
     },
     itemY:{
+        fontSize:30,
         color:'#fff',
     },
     modal:{
         flex:1,
-        backgroundColor:'#00000048'
+        backgroundColor:'#00000090',
+        display:'flex',
+        flexDirection:'column',
+        justifyContent:'center',
+        alignItems:'center',
+    },
+    modalBox:{
+        borderWidth:2,
+        borderColor:'#fff',
+        borderRadius:20,
+        padding:'10%',
+        backgroundColor:'#450b1e',
+    },
+    textModal:{
+        fontSize:35,
+        color:'#fff',
+        textAlign:'center',
+    },
+    textAModal:{
+        fontSize:42,
+        color:'#4CEDBD',
+        textAlign:'center',
     },
 })

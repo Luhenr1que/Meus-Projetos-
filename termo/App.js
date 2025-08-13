@@ -11,7 +11,7 @@ export default function App() {
   const criarMatriz = (linhas, colunas) => {
     return Array(linhas).fill(null).map(() => Array(colunas).fill(''));
   }
-  const [numCerto,setNumCerto] = useState([rInt(0,10),rInt(0,10),rInt(0,10),rInt(0,10)]);
+  const [numCerto,setNumCerto] = useState([rInt(0, 9),rInt(0,9),rInt(0,9),rInt(0,9)]);
   const [resposta, setResposta] = useState(criarMatriz(6,4));  
   const [statusRodadas, setStatusRodadas] = useState(criarMatriz(6,4));
   const [rodada,setRodada] = useState(0);
@@ -19,10 +19,10 @@ export default function App() {
   const [perda,setPerda] = useState(false);
   const [ganho,setGanho] = useState(false); 
 
-  const reiniciar=()=>{
-    setNumCerto(rInt(0,10),rInt(0,10),rInt(0,10),rInt(0,10));
-    setResposta(criarMatriz(6,4));
-    setStatusRodadas(criarMatriz(6,4));
+  const reiniciar = () => {
+    setNumCerto([rInt(0, 9), rInt(0, 9), rInt(0, 9), rInt(0, 9)]);
+    setResposta(criarMatriz(6, 4));
+    setStatusRodadas(criarMatriz(6, 4));
     setRodada(0);
     setPosi(0);
     setGanho(false);
@@ -53,55 +53,54 @@ export default function App() {
       setPosi(3);
     }
   }
+  
+    const linhaAtualPreenchida = () => {
+      return resposta[rodada]?.every(valor => valor !== '');
+    };
 
-  const enviarResposta = () => {
-    if (rodada < 5) {
+    const enviarResposta = () => {
       const respostaAtual = resposta[rodada];
       const novaStatus = [...statusRodadas];
       const statusAtual = Array(4).fill('');
-      let j = 0;
+    
+      const contador = {}; // Conta quantas vezes cada número aparece em numCerto
+      numCerto.forEach((num) => {
+        contador[num] = (contador[num] || 0) + 1;
+      });
+    
+      // Primeiro, marca as posições corretas
       for (let i = 0; i < 4; i++) {
         if (respostaAtual[i] == numCerto[i]) {
-          j++;
-          if(j>3){
-            setGanho(true);
-          }
           statusAtual[i] = "correta";
-        }else if(respostaAtual[i] == numCerto[0] || respostaAtual[i] == numCerto[1] || respostaAtual[i] == numCerto[2] || respostaAtual[i] == numCerto[3]){
-          statusAtual[i] = "existe";
-        }else{
-          statusAtual[i] = "errada";
+          contador[respostaAtual[i]]--;
         }
       }
-      novaStatus[rodada] = statusAtual; 
+    
+      // Depois, marca as que existem em outra posição
+      for (let i = 0; i < 4; i++) {
+        if (statusAtual[i] === '') {
+          if (contador[respostaAtual[i]] > 0) {
+            statusAtual[i] = "existe";
+            contador[respostaAtual[i]]--;
+          } else {
+            statusAtual[i] = "errada";
+          }
+        }
+      }
+    
+      novaStatus[rodada] = statusAtual;
       setStatusRodadas(novaStatus);
-
+    
+      if (statusAtual.every(status => status === "correta")) {
+        setGanho(true);
+      } else if (rodada === 5) {
+        setPerda(true);
+      }
+    
       setRodada(rodada + 1);
       setPosi(0);
-    }else{
-      const respostaAtual = resposta[rodada];
-      const novaStatus = [...statusRodadas];
-      const statusAtual = Array(4).fill('');
-      let j = 0;
-      for (let i = 0; i < 4; i++) {
-        if (respostaAtual[i] == numCerto[i]) {
-          statusAtual[i] = "correta";
-          j++;
-          if(j>3){
-            setGanho(true);
-          }
-        }else if(respostaAtual[i] == numCerto[0] || respostaAtual[i] == numCerto[1] || respostaAtual[i] == numCerto[2] || respostaAtual[i] == numCerto[3]){
-          statusAtual[i] = "existe";
-          setPerda(true);
-        }else{
-          statusAtual[i] = "errada";
-          setPerda(true);
-        }
-      }
-      novaStatus[rodada] = statusAtual; 
-      setStatusRodadas(novaStatus);
-    }
-  };
+    };
+    
 
   const Espaço = ({ size }) => <View style={{ width: size }} />;
   const renderValores = () => {
@@ -110,29 +109,58 @@ export default function App() {
         {linha.map((valor, subIndex) => {
           const status = statusRodadas[index]?.[subIndex];
           let backgroundColor = '#21000f';
-
+  
           if (status === "correta") backgroundColor = "#0e5014ff";
           else if (status === "existe") backgroundColor = "#d4b609ff";
           else if (status === "errada") backgroundColor = "#140a0aff";
-
+  
           const estaSelecionado = (index == rodada && subIndex == posi);
-          return (
-            <View key={subIndex}
-              style={[styles.valores,{backgroundColor},estaSelecionado && { borderWidth: 2, borderColor: "#fff" }]}
-            >
-              <Text style={styles.texto}>{valor || ''}</Text>
-            </View>
-          );
+  
+          // Só o quadrado da linha atual pode ser clicado
+          if (index === rodada) {
+            return (
+              <Pressable
+                key={subIndex}
+                style={[
+                  styles.valores,
+                  { backgroundColor },
+                  estaSelecionado && { borderWidth: 2, borderColor: "#fff" }
+                ]}
+                onPress={() => {
+                  setPosi(subIndex);
+                }}
+              >
+                <Text style={styles.texto}>{valor || ''}</Text>
+              </Pressable>
+            );
+          } else {
+            // Para outras linhas, apenas View (não clicável)
+            return (
+              <View
+                key={subIndex}
+                style={[
+                  styles.valores,
+                  { backgroundColor },
+                  estaSelecionado && { borderWidth: 2, borderColor: "#fff" }
+                ]}
+              >
+                <Text style={styles.texto}>{valor || ''}</Text>
+              </View>
+            );
+          }
         })}
       </View>
     ));
   };
+  
+  
 
   useEffect(() =>{
-    /* console.log("Num Certo"+numCerto);
+    console.log("Num Certo"+numCerto);
     console.log("Sua resposta: "+resposta);
     console.log("Rodada atual: "+rodada);
-    console.log("Posição atual: "+posi); */
+    console.log("Posição atual: "+posi);
+    console.log(linhaAtualPreenchida())
   },
     [numCerto],
     [resposta],
@@ -193,14 +221,14 @@ export default function App() {
 
           <View style={styles.linha}>
             <Pressable style={styles.ordem} onPress={()=> {delNum('')}}>
-              <Text style={styles.itemX}>X</Text>
+              <Text style={styles.itemX}>⌫</Text>
             </Pressable>
             <Espaço size={8}/>
             <Pressable style={styles.ordem} onPress={() => addNum('0')}>
               <Text style={styles.item}>0</Text>
             </Pressable>
             <Espaço size={8}/>
-            <Pressable style={styles.ordem} onPress={()=> {enviarResposta()}}>
+            <Pressable style={styles.ordem} onPress={() => linhaAtualPreenchida() && enviarResposta()}>
               <Text style={styles.itemY}>✓</Text>
             </Pressable>
           </View>
@@ -212,10 +240,13 @@ export default function App() {
         onRequestClose={() => setGanho(false)}
       >
         <View style={styles.modal}>
-          <Text>Vc Ganhou</Text>
-          <Pressable onPress={()=>{reiniciar()}}>
-            <Text>Repetir</Text>
-          </Pressable>  
+          <View style={styles.modalBox}>
+            <Text style={styles.textModal}>Vc Ganhou</Text>
+            <Pressable onPress={()=>{reiniciar()}}>
+              <Text style={styles.textAModal}>Repetir?</Text>
+            </Pressable>              
+          </View>
+
         </View>
       </Modal>
       <Modal
@@ -225,10 +256,13 @@ export default function App() {
         onRequestClose={() => setGanho(false)}
       >
         <View style={styles.modal}>
-          <Text>Vc Perdeu</Text>
-          <Pressable onPress={()=>{reiniciar()}}>
-            <Text>Repetir</Text>
-          </Pressable>  
+          <View style={styles.modalBox}>
+            <Text style={styles.textModal}>Vc Perdeu</Text>
+            <Pressable onPress={()=>{reiniciar()}}>
+              <Text style={styles.textAModal}>Repetir?</Text>
+            </Pressable>              
+          </View>
+
         </View>
       </Modal>
       <StatusBar style="auto" />
