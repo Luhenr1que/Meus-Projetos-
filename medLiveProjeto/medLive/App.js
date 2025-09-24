@@ -8,6 +8,9 @@ import { ThemeProvider, useTheme } from './themeContext';
 import Home from './src/principal/views/home/home';
 import Login from './src/inicio/views/login/login';
 import Cadastro from './src/inicio/views/cadastro/cadastro';
+import Cadastro2 from './src/inicio/views/cadastro/etapa2';
+import Cadastro3 from './src/inicio/views/cadastro/etapa3';
+import Cadastro4 from './src/inicio/views/cadastro/etapa4';
 
 export default function App() {
   const Stack = createNativeStackNavigator();
@@ -19,6 +22,9 @@ export default function App() {
               <Stack.Screen name="Home" component={Home} options={{ headerShown: false }} />
               <Stack.Screen name="Login" component={Login} options={{ headerShown: false }} />
               <Stack.Screen name="Cadastro" component={Cadastro} options={{ headerShown: false }} />
+              <Stack.Screen name="Cadastro2" component={Cadastro2} options={{ headerShown: false }} />
+              <Stack.Screen name="Cadastro3" component={Cadastro3} options={{ headerShown: false }} />
+              <Stack.Screen name="Cadastro4" component={Cadastro4} options={{ headerShown: false }} />
             </Stack.Navigator>
           </NavigationContainer>
       </ThemeProvider>

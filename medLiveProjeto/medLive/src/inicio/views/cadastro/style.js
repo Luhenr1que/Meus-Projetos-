@@ -1,208 +1,329 @@
-import{StyleSheet, Dimensions} from 'react-native';
+import { StyleSheet, Dimensions } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
 
-export default function getStyles (isDarkMode){
+export default function getStyles(isDarkMode) {
+  const backgroundColor = isDarkMode ? '#1A1A1A' : '#FFFFFF';
+  const cardBackground = isDarkMode ? '#2D2D2D' : '#FFFFFF';
+  const textColor = isDarkMode ? "#FFFFFF" : "#131F3C";
+  const secondaryTextColor = isDarkMode ? "#CCCCCC" : "#666666";
+  const borderColor = isDarkMode ? "#444" : "#E0E0E0";
+  const primaryColor = '#856bccff';
 
-  const backgroundColor = isDarkMode ? '#3b3b3bff' : '#ffffffff';
-  const backgroundColorBotoes = isDarkMode ? '#186858ff' : '#186858ff';
-  const textColor = isDarkMode ? "#fff" : "#131F3C";
-  const textLoginColor1 = isDarkMode ? "#fff" : '#40666B';
-  const textLoginColor2 = isDarkMode ? "#1b6abdff" : '#1812cdff';
-
-return StyleSheet.create({
-    botoes:{
-        display:'flex',
-        flexDirection:'row',
-        justifyContent:'space-between',
-        alignItems:'flex-end',
-        width: '100%',  
-        height:'10%',
-        backgroundColor:backgroundColorBotoes,
-        marginTop:25,
+  return StyleSheet.create({
+    // ===== LAYOUT PRINCIPAL CORRIGIDO =====
+    container: {
+      width: '100%',
+      minHeight: height * 0.85, // Alterado para minHeight
+      backgroundColor: cardBackground,
+      borderTopLeftRadius: 40,
+      borderTopRightRadius: 40,
+      paddingHorizontal: 24,
+      paddingTop: 40,
+      paddingBottom: 40, // Adicionado padding bottom
+      shadowColor: '#000',
+      shadowOffset: {
+        width: 0,
+        height: -4,
+      },
+      shadowOpacity: 0.1,
+      shadowRadius: 20,
+      elevation: 10,
+      marginTop: height * 0.15, // Adiciona espaço no topo
     },
-    container:{
-        width:'100%',
-        paddingTop:'55',
-        height:'100%',
-        backgroundColor: backgroundColor ,
-        alignItems: 'center',
-        borderTopLeftRadius:30,
-        borderTopRightRadius:30,
+
+    // ===== HEADER E LOGO =====
+    header: {
+      alignItems: 'center',
+      marginBottom: 40,
     },
     logo: {
-        width: width*0.408,
-        height:width*0.458,     
-        alignSelf: 'center',
+      width: width * 0.5,
+      height: width * 0.5 * 0.4,
+      marginBottom: 20,
     },
-    titulo:{
-        marginBottom: 30,
-        width: '80%',
-        borderRadius: 15,
-        paddingHorizontal: 10,
-        fontSize:30,
-        color: textColor,
-        textAlign:'center',
-        fontFamily:'inter',
-        fontWeight:600,
-    },
-    text: {
-        marginTop: 20,
-        width: '80%',
-        height: 70,
-        borderBottomWidth:2,
-        borderColor: isDarkMode ? "#fff" : "#000",
-        borderRadius: 0,
-        paddingHorizontal: 10,
-        fontSize: 20,
-        color: isDarkMode ? "#fff" : "#000",
-        fontWeight:'600',
-      },
-      textInput:{
-        flex: 1,
-        fontSize:18,
-        color:textColor,
-      },
-    textBtn:{
-        color:'#fff',
-        fontSize:28,
-        textAlignVertical:'center',
-        textAlign:'center',
-        fontWeight:600,
-    },
-    btn:{
-        marginTop:20,
-        width: '70%',
-        padding:10,
-        borderRadius: 25,
 
+    // ===== TÍTULOS E TEXTOS =====
+    titulo: {
+      fontSize: 28,
+      fontWeight: '700',
+      color: textColor,
+      textAlign: 'center',
+      marginBottom: 8,
+    },
+    subtitle: {
+      fontSize: 16,
+      color: secondaryTextColor,
+      textAlign: 'center',
+      marginBottom: 40,
+    },
+
+    // ===== FORMULÁRIO =====
+    formContainer: {
+      width: '100%',
+    },
+    inputContainer: {
+      marginBottom: 24,
+    },
+    label: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: textColor,
+      marginBottom: 8,
+    },
+
+    // ===== CAMPOS DE TEXTO =====
+    textInputWrapper: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      borderWidth: 2,
+      borderColor: borderColor,
+      borderRadius: 12,
+      paddingHorizontal: 16,
+      height: 56,
+      backgroundColor: isDarkMode ? '#333' : '#F8F8F8',
+    },
+    textInput: {
+      flex: 1,
+      fontSize: 16,
+      color: textColor,
+      paddingVertical: 8,
+    },
+
+    // ===== CAMPOS DE SENHA =====
+    senhaWrapper: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      borderWidth: 2,
+      borderColor: borderColor,
+      borderRadius: 12,
+      paddingHorizontal: 16,
+      height: 56,
+      backgroundColor: isDarkMode ? '#333' : '#F8F8F8',
+    },
+    senhaInput: {
+      flex: 1,
+      fontSize: 16,
+      color: textColor,
+      paddingVertical: 8,
+    },
+    olhoBotao: {
+      padding: 4,
+    },
+    passwordHint: {
+      fontSize: 12,
+      color: secondaryTextColor,
+      marginTop: 4,
+      marginLeft: 4,
+    },
+
+    // ===== BOTÕES =====
+    botoes: {
+      width: '100%',
+      borderRadius: 16,
+      overflow: 'hidden',
+      marginBottom: 24,
+      shadowColor: primaryColor,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 6,
+      marginTop: 40,
     },
     gradient: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 16,
+      paddingHorizontal: 24,
+    },
+    textBtn: {
+      color: '#FFFFFF',
+      fontSize: 18,
+      fontWeight: '600',
+      marginRight: 8,
+    },
+
+    // ===== DIVISOR =====
+    divider: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginVertical: 24,
+    },
+    dividerLine: {
+      flex: 1,
+      height: 1,
+      backgroundColor: borderColor,
+    },
+    dividerText: {
+      marginHorizontal: 16,
+      color: secondaryTextColor,
+      fontSize: 14,
+    },
+
+    // ===== LINK PARA LOGIN =====
+    signupContainer: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: 30,
+    },
+    signupText: {
+      fontSize: 16,
+      color: secondaryTextColor,
+    },
+    signupLink: {
+      fontSize: 16,
+      marginLeft: 6,
+      color: primaryColor,
+      fontWeight: '600',
+    },
+
+    // ===== ESTADOS DOS INPUTS =====
+    inputFocused: {
+      borderColor: primaryColor,
+      shadowColor: primaryColor,
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: 0.2,
+      shadowRadius: 8,
+      elevation: 4,
+    },
+    inputValid: {
+      borderColor: '#4CAF50',
+    },
+
+    tipoSanguineoBtn: {
+        paddingHorizontal: 15,
+        paddingVertical: 8,
+        borderRadius: 20,
+        backgroundColor: '#444',
+        borderWidth: 2,
+        borderColor: '#666'
+        },
+        tipoSanguineoBtnSelected: {
+        backgroundColor: '#6247AA',
+        borderColor: '#6247AA'
+        },
+        tipoSanguineoText: {
+        color: '#fff',
+        fontWeight: '600',
+        fontSize: 16
+        },
+        tipoSanguineoTextSelected: {
+        color: '#fff'
+        },
+        selecionadoText: {
+        color: '#6247AA',
+        fontSize: 14,
+        marginTop: 5,
+        fontWeight: '500',
+        textAlign: 'center'
+        },
+        fotoContainer: {
+        alignItems: 'center',
+        marginBottom: 30,
         width: '100%',
-        paddingVertical: 12,
-        borderRadius: 25,
+        },
+
+        fotoButton: {
+        position: 'relative',
+        marginBottom: 15,
+        },
+
+        fotoSelecionada: {
+        width: 150,
+        height: 150,
+        borderRadius: 75,
+        borderWidth: 3,
+        borderColor: '#6247AA',
+        },
+
+        fotoPlaceholder: {
+        width: 150,
+        height: 150,
+        borderRadius: 75,
         justifyContent: 'center',
         alignItems: 'center',
-    },
-    ModalConatiner:{
-        width:'100%',
-        height:'100%',
-        backgroundColor:'#454545d8',
-        display:'flex',
-        justifyContent:'center',
-        alignItems:'center'
-    },
-    ModalBox:{
-        display:'flex',
-        alignItems:'center',
-        width:'80%',
-        height:'80%',
-        borderRadius:15,
-        backgroundColor:'#f8f4ecff',
-        position:'relative',
-        padding:20,
-        elevation:10,
-    },
-    modalContent: {
-        width: '100%',
-        height: '100%',
-        paddingTop: 30, 
-    },
-    close:{
-        width:40,
-        height:40,
-        backgroundColor:'#e4e4e4ff',
-        display:'flex',
-        justifyContent:'center',
-        alignItems:'center',
-        borderRadius:'50%',
-        top:-15,
-        left:-15,
-        position:'absolute',
-    },
-    closeImg:{
-        width:20,
-        height:20,
-        tintColor:'#2c2c2cff',
-    },
-    titutMIni:{
-        fontSize: 29,
-        fontWeight: '700',
+        borderWidth: 3,
+        borderColor: isDarkMode ? '#fff' : '#fff',
+        borderStyle: 'dashed',
+        },
+
+        editIconContainer: {
+        position: 'absolute',
+        bottom: 5,
+        right: 5,
+        backgroundColor: '#6247AA',
+        borderRadius: 15,
+        width: 30,
+        height: 30,
+        justifyContent: 'center',
+        alignItems: 'center',
+        },
+
+        fotoPlaceholderSubtext: {
+        color: '#fff',
+        fontSize: 12,
+        marginTop: 8,
         textAlign: 'center',
-        color: '#222',
-        marginBottom: 15,
-        letterSpacing: 0.5
-    },
-    textMIni: {
-        lineHeight:28,
-        fontWeight:'500',
-        fontSize: 20,
-        color: '#333',
-        lineHeight: 24, 
-        textAlign: 'center', 
-        paddingHorizontal: 10, 
-        marginBottom:20,
-    },
-    imgMIni:{
-        width:width*0.6,
-        height:height*0.33,
-        marginHorizontal:'10%',
-        marginBottom:10,
-        marginTop:20,
-    },
-    scrollContainer: {
+        fontWeight: '500',
+        },
+
+        instrucoesText: {
+        color: isDarkMode ? '#ccc' : '#fff',
+        fontSize: 14,
+        textAlign: 'center',
+        fontWeight: '500',
+        },
+
+        modalContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        },
+
+        modalContent: {
+        backgroundColor: isDarkMode ? '#333' : '#fff',
+        borderRadius: 15,
+        padding: 20,
+        width: '80%',
+        alignItems: 'center',
+        },
+
+        modalTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginBottom: 20,
+        color: isDarkMode ? '#fff' : '#000',
+        },
+
+        modalOption: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 15,
         width: '100%',
-        flex: 1, 
-    },
-    loginText:{
-        display:'flex',
-        textAlign:'center',
-        justifyContent:'center',
-        alignItems:'center',
-        fontSize:19,
-        marginBottom:3,
-        color: textLoginColor1,
-  },
-  loginbtn:{
-        textAlign:'center',
-        fontSize:18,
-        marginLeft:6,
-        color: textLoginColor2,
-  },
-  login:{
-        marginTop:20,
-        display:'flex',
-        textAlign:'center',
-        justifyContent:'center',
-        alignItems:'center',
-        flexDirection:'row',
-  },
-  senhaContainer: {
-    flexDirection: 'row',
-    height: 60,
-    width: '80%',
-    borderBottomWidth:3,
-    borderRadius: 0,
-    paddingHorizontal: 10,
-    marginBottom: 20,
-  },
+        borderBottomWidth: 1,
+        borderBottomColor: isDarkMode ? '#555' : '#eee',
+        },
 
-  senhaInput: {
-    height: 60,
-    flex: 1,
-    fontSize: 18,
-    color:textColor,
-  },
+        modalOptionText: {
+        fontSize: 16,
+        marginLeft: 10,
+        color: isDarkMode ? '#fff' : '#000',
+        },
 
-  olhoBotao: {
-    padding: 5,
-  },
+        modalCancel: {
+        padding: 15,
+        width: '100%',
+        alignItems: 'center',
+        marginTop: 10,
+        },
 
-  olhoIcone: {
-    width: 34,
-    height: 27,
-    tintColor: isDarkMode ? '#fff' :'#000000ff', 
-  },
-})
+        modalCancelText: {
+        fontSize: 16,
+        color: '#6247AA',
+        fontWeight: '600',
+        },
+  });
 }
-

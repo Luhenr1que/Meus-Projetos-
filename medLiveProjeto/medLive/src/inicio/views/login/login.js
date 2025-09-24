@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { View, ScrollView, TextInput, Text, Pressable, Image, Dimensions } from "react-native";
+import { View, ScrollView, TextInput, Text, Pressable, Image, Dimensions, TouchableOpacity } from "react-native";
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../../../../themeContext';
 import getStyles from './style';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function Login({ navigation }) {
   const [focusedInput, setFocusedInput] = useState(null);
@@ -15,68 +16,140 @@ export default function Login({ navigation }) {
 
   const cad = (field, value) => setFormData(prev => ({ ...prev, [field]: value }));
 
+  const handleInputFocus = (inputName) => {
+    setFocusedInput(inputName);
+  };
+
+  const handleInputBlur = () => {
+    setFocusedInput(null);
+  };
+
   return (
-    <View style={{ flex: 1, width: '100%', backgroundColor: '#6247AA' }}>
+    <LinearGradient
+      colors={isDarkMode ? ['#2D1B69', '#6247AA'] : ['#6247AA', '#856BCC']}
+      style={{ flex: 1 }}
+    >
       <ScrollView
-        contentContainerStyle={{ flexGrow: 1, justifyContent: 'flex-end', alignItems: 'center' }}
+        contentContainerStyle={{ flexGrow: 1, justifyContent: 'flex-end' }}
         keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
         <View style={styles.container}>
-          <Image source={require('../../../../assets/img/medLiveLogo.png')} style={{width:width*0.65,height:height*0.26,marginTop:20,}}></Image>
-
-          {/* Campo de Email */}
-          <View style={styles.text}>
-            <Text style={{ fontSize: 20, fontWeight: '600', color: isDarkMode ? '#fff' : '#000' }}>
-              Email
-            </Text>
-            <TextInput
-              style={[styles.textInput, { borderBottomColor: formData.email ? 'green' : '#713205' }]}
-              placeholderTextColor={isDarkMode ? '#fff' : '#131F3C'}
-              keyboardType="email-address"
-              onChangeText={(text) => cad('email', text)}
-              value={formData.email}
+          {/* Header com Logo */}
+          <View style={styles.header}>
+            <Image 
+              source={require('../../../../assets/img/medLiveLogo.png')} 
+              style={styles.logo}
+              resizeMode="contain"
             />
+            <Text style={styles.title}>Bem-vindo de volta!</Text>
+            <Text style={styles.subtitle}>Faça login para continuar</Text>
           </View>
 
-          {/* Campo de Senha */}
-          <View style={[styles.text, styles.senhaContainer]}>
-            <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 20, fontWeight: '600', color: isDarkMode ? '#fff' : '#000' }}>
-                Senha
-              </Text>
-              <TextInput
-                style={[styles.senhaInput, { borderColor: formData.senha.length >= 8 ? 'green' : '#713205' }]}
-                maxLength={8}
-                secureTextEntry={!senhaVisivel}
-                placeholderTextColor={isDarkMode ? "#fff" : "#131F3C"}
-                onChangeText={(text) => cad("senha", text)}
-                value={formData.senha}
-              />
+          {/* Formulário */}
+          <View style={styles.formContainer}>
+            {/* Campo de Email */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Email</Text>
+              <View style={[
+                styles.inputWrapper,
+                focusedInput === 'email' && styles.inputFocused,
+                formData.email && styles.inputValid
+              ]}>
+                <Ionicons 
+                  name="mail-outline" 
+                  size={20} 
+                  color={focusedInput === 'email' ? '#6247AA' : '#999'} 
+                  style={styles.inputIcon}
+                />
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="seu@email.com"
+                  placeholderTextColor={isDarkMode ? '#888' : '#666'}
+                  keyboardType="email-address"
+                  onChangeText={(text) => cad('email', text)}
+                  value={formData.email}
+                  onFocus={() => handleInputFocus('email')}
+                  onBlur={handleInputBlur}
+                  autoCapitalize="none"
+                />
+              </View>
             </View>
-            <Pressable onPress={() => setSenhaVisivel(!senhaVisivel)} style={styles.olhoBotao} />
-          </View>
 
-          {/* Link para cadastro */}
-          <View style={styles.login}>
-            <Text style={styles.loginText}>{'Não tem uma conta?'}</Text>
-            <Pressable onPress={() => navigation.navigate('Cadastro')}>
-              <Text style={styles.loginbtn}>{'Crie uma.'}</Text>
+            {/* Campo de Senha */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Senha</Text>
+              <View style={[
+                styles.inputWrapper,
+                focusedInput === 'senha' && styles.inputFocused,
+                formData.senha.length >= 8 && styles.inputValid
+              ]}>
+                <Ionicons 
+                  name="lock-closed-outline" 
+                  size={20} 
+                  color={focusedInput === 'senha' ? '#6247AA' : '#999'} 
+                  style={styles.inputIcon}
+                />
+                <TextInput
+                  style={styles.senhaInput}
+                  placeholder="Sua senha"
+                  placeholderTextColor={isDarkMode ? '#888' : '#666'}
+                  maxLength={8}
+                  secureTextEntry={!senhaVisivel}
+                  onChangeText={(text) => cad("senha", text)}
+                  value={formData.senha}
+                  onFocus={() => handleInputFocus('senha')}
+                  onBlur={handleInputBlur}
+                />
+                <TouchableOpacity 
+                  onPress={() => setSenhaVisivel(!senhaVisivel)} 
+                  style={styles.eyeButton}
+                >
+                  <Ionicons 
+                    name={senhaVisivel ? "eye-off-outline" : "eye-outline"} 
+                    size={20} 
+                    color={isDarkMode ? '#fff' : '#666'} 
+                  />
+                </TouchableOpacity>
+              </View>
+              <Text style={styles.passwordHint}>Máximo 8 caracteres</Text>
+            </View>
+
+            {/* Link Esqueci a Senha */}
+            <Pressable style={styles.forgotPassword}>
+              <Text style={styles.forgotPasswordText}>Esqueceu sua senha?</Text>
             </Pressable>
-          </View>
 
-          {/* Botão de login */}
-          <Pressable style={styles.btn}>
-            <LinearGradient
-              colors={['#6247AA', '#856bccff']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.gradient}
-            >
-              <Text style={styles.textBtn}>Entrar</Text>
-            </LinearGradient>
-          </Pressable>
+            {/* Botão de login */}
+            <TouchableOpacity style={styles.loginButton}>
+              <LinearGradient
+                colors={['#6247AA', '#856BCC']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.gradient}
+              >
+                <Text style={styles.loginButtonText}>Entrar</Text>
+                <Ionicons name="arrow-forward" size={20} color="#fff" />
+              </LinearGradient>
+            </TouchableOpacity>
+
+            {/* Divisor */}
+            <View style={styles.divider}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>ou</Text>
+              <View style={styles.dividerLine} />
+            </View>
+
+            {/* Link para cadastro */}
+            <View style={styles.signupContainer}>
+              <Text style={styles.signupText}>Não tem uma conta?</Text>
+              <Pressable onPress={() => navigation.navigate('Cadastro')}>
+                <Text style={styles.signupLink}>Crie uma</Text>
+              </Pressable>
+            </View>
+          </View>
         </View>
       </ScrollView>
-    </View>
+    </LinearGradient>
   );
 }

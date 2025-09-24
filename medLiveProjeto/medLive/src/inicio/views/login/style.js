@@ -1,208 +1,198 @@
-import{StyleSheet, Dimensions} from 'react-native';
+import { StyleSheet, Dimensions } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
 
-export default function getStyles (isDarkMode){
+export default function getStyles(isDarkMode) {
+  const backgroundColor = isDarkMode ? '#1A1A1A' : '#FFFFFF';
+  const cardBackground = isDarkMode ? '#2D2D2D' : '#FFFFFF';
+  const textColor = isDarkMode ? "#FFFFFF" : "#131F3C";
+  const secondaryTextColor = isDarkMode ? "#CCCCCC" : "#666666";
+  const borderColor = isDarkMode ? "#444" : "#E0E0E0";
 
-  const backgroundColor = isDarkMode ? '#3b3b3bff' : '#ffffffff';
-  const backgroundColorBotoes = isDarkMode ? '#186858ff' : '#186858ff';
-  const textColor = isDarkMode ? "#fff" : "#131F3C";
-  const textLoginColor1 = isDarkMode ? "#fff" : '#40666B';
-  const textLoginColor2 = isDarkMode ? "#1b6abdff" : '#1812cdff';
+  return StyleSheet.create({
+    container: {
+      width: '100%',
+      height: height * 0.85,
+      backgroundColor: cardBackground,
+      borderTopLeftRadius: 40,
+      borderTopRightRadius: 40,
+      paddingHorizontal: 24,
+      paddingTop: 40,
+      shadowColor: '#000',
+      shadowOffset: {
+        width: 0,
+        height: -4,
+      },
+      shadowOpacity: 0.1,
+      shadowRadius: 20,
+      elevation: 10,
+    },
 
-return StyleSheet.create({
-    botoes:{
-        display:'flex',
-        flexDirection:'row',
-        justifyContent:'space-between',
-        alignItems:'flex-end',
-        width: '100%',  
-        height:'10%',
-        backgroundColor:backgroundColorBotoes,
-        marginTop:25,
+    header: {
+      alignItems: 'center',
+      marginBottom: 40,
     },
-    container:{
-        width:'100%',
-        paddingTop:'55',
-        height:'80%',
-        backgroundColor: backgroundColor ,
-        alignItems: 'center',
-        borderTopLeftRadius:30,
-        borderTopRightRadius:30,
-    },
+
     logo: {
-        width: width*0.408,
-        height:width*0.458,     
-        alignSelf: 'center',
+      width: width * 0.5,
+      height: width * 0.5 * 0.4,
+      marginBottom: 20,
     },
-    titulo:{
-        marginBottom: 30,
-        width: '80%',
-        borderRadius: 15,
-        paddingHorizontal: 10,
-        fontSize:30,
-        color: textColor,
-        textAlign:'center',
-        fontFamily:'inter',
-        fontWeight:600,
-    },
-    text: {
-        marginTop: 20,
-        width: '80%',
-        height: 70,
-        borderBottomWidth:2,
-        borderColor: isDarkMode ? "#fff" : "#000",
-        borderRadius: 0,
-        paddingHorizontal: 10,
-        fontSize: 20,
-        color: isDarkMode ? "#fff" : "#000",
-        fontWeight:'600',
-      },
-      textInput:{
-        flex: 1,
-        fontSize:18,
-        color:textColor,
-      },
-    textBtn:{
-        color:'#fff',
-        fontSize:28,
-        textAlignVertical:'center',
-        textAlign:'center',
-        fontWeight:600,
-    },
-    btn:{
-        marginTop:20,
-        width: '70%',
-        padding:10,
-        borderRadius: 25,
 
+    title: {
+      fontSize: 28,
+      fontWeight: '700',
+      color: textColor,
+      textAlign: 'center',
+      marginBottom: 8,
     },
+
+    subtitle: {
+      fontSize: 16,
+      color: secondaryTextColor,
+      textAlign: 'center',
+    },
+
+    formContainer: {
+      width: '100%',
+    },
+
+    inputContainer: {
+      marginBottom: 24,
+    },
+
+    label: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: textColor,
+      marginBottom: 8,
+    },
+
+    inputWrapper: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      borderWidth: 2,
+      borderColor: borderColor,
+      borderRadius: 12,
+      paddingHorizontal: 16,
+      height: 56,
+      backgroundColor: isDarkMode ? '#333' : '#F8F8F8',
+    },
+
+    inputFocused: {
+      borderColor: '#6247AA',
+      shadowColor: '#6247AA',
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: 0.2,
+      shadowRadius: 8,
+      elevation: 4,
+    },
+
+    inputValid: {
+      borderColor: '#4CAF50',
+    },
+
+    inputIcon: {
+      marginRight: 12,
+    },
+
+    textInput: {
+      flex: 1,
+      fontSize: 16,
+      color: textColor,
+      paddingVertical: 8,
+    },
+
+    senhaInput: {
+      flex: 1,
+      fontSize: 16,
+      color: textColor,
+      paddingVertical: 8,
+    },
+
+    eyeButton: {
+      padding: 4,
+    },
+
+    passwordHint: {
+      fontSize: 12,
+      color: secondaryTextColor,
+      marginTop: 4,
+      marginLeft: 4,
+    },
+
+    forgotPassword: {
+      alignSelf: 'flex-end',
+      marginBottom: 32,
+    },
+
+    forgotPasswordText: {
+      color: '#6247AA',
+      fontSize: 14,
+      fontWeight: '600',
+    },
+
+    loginButton: {
+      width: '100%',
+      borderRadius: 16,
+      overflow: 'hidden',
+      marginBottom: 24,
+      shadowColor: '#6247AA',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 6,
+    },
+
     gradient: {
-        width: '100%',
-        paddingVertical: 12,
-        borderRadius: 25,
-        justifyContent: 'center',
-        alignItems: 'center',
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 16,
+      paddingHorizontal: 24,
     },
-    ModalConatiner:{
-        width:'100%',
-        height:'100%',
-        backgroundColor:'#454545d8',
-        display:'flex',
-        justifyContent:'center',
-        alignItems:'center'
-    },
-    ModalBox:{
-        display:'flex',
-        alignItems:'center',
-        width:'80%',
-        height:'80%',
-        borderRadius:15,
-        backgroundColor:'#f8f4ecff',
-        position:'relative',
-        padding:20,
-        elevation:10,
-    },
-    modalContent: {
-        width: '100%',
-        height: '100%',
-        paddingTop: 30, 
-    },
-    close:{
-        width:40,
-        height:40,
-        backgroundColor:'#e4e4e4ff',
-        display:'flex',
-        justifyContent:'center',
-        alignItems:'center',
-        borderRadius:'50%',
-        top:-15,
-        left:-15,
-        position:'absolute',
-    },
-    closeImg:{
-        width:20,
-        height:20,
-        tintColor:'#2c2c2cff',
-    },
-    titutMIni:{
-        fontSize: 29,
-        fontWeight: '700',
-        textAlign: 'center',
-        color: '#222',
-        marginBottom: 15,
-        letterSpacing: 0.5
-    },
-    textMIni: {
-        lineHeight:28,
-        fontWeight:'500',
-        fontSize: 20,
-        color: '#333',
-        lineHeight: 24, 
-        textAlign: 'center', 
-        paddingHorizontal: 10, 
-        marginBottom:20,
-    },
-    imgMIni:{
-        width:width*0.6,
-        height:height*0.33,
-        marginHorizontal:'10%',
-        marginBottom:10,
-        marginTop:20,
-    },
-    scrollContainer: {
-        width: '100%',
-        flex: 1, 
-    },
-    loginText:{
-        display:'flex',
-        textAlign:'center',
-        justifyContent:'center',
-        alignItems:'center',
-        fontSize:19,
-        marginBottom:3,
-        color: textLoginColor1,
-  },
-  loginbtn:{
-        textAlign:'center',
-        fontSize:18,
-        marginLeft:6,
-        color: textLoginColor2,
-  },
-  login:{
-        marginTop:20,
-        display:'flex',
-        textAlign:'center',
-        justifyContent:'center',
-        alignItems:'center',
-        flexDirection:'row',
-  },
-  senhaContainer: {
-    flexDirection: 'row',
-    height: 60,
-    width: '80%',
-    borderBottomWidth:3,
-    borderRadius: 0,
-    paddingHorizontal: 10,
-    marginBottom: 20,
-  },
 
-  senhaInput: {
-    height: 60,
-    flex: 1,
-    fontSize: 18,
-    color:textColor,
-  },
+    loginButtonText: {
+      color: '#FFFFFF',
+      fontSize: 18,
+      fontWeight: '600',
+      marginRight: 8,
+    },
 
-  olhoBotao: {
-    padding: 5,
-  },
+    divider: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginVertical: 24,
+    },
 
-  olhoIcone: {
-    width: 34,
-    height: 27,
-    tintColor: isDarkMode ? '#fff' :'#000000ff', 
-  },
-})
+    dividerLine: {
+      flex: 1,
+      height: 1,
+      backgroundColor: borderColor,
+    },
+
+    dividerText: {
+      color: secondaryTextColor,
+      paddingHorizontal: 16,
+      fontSize: 14,
+    },
+
+    signupContainer: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+
+    signupText: {
+      color: secondaryTextColor,
+      fontSize: 16,
+    },
+
+    signupLink: {
+      color: '#6247AA',
+      fontSize: 16,
+      fontWeight: '600',
+      marginLeft: 8,
+    },
+  });
 }
-
