@@ -5,18 +5,24 @@ import { useTheme } from '../../../../themeContext';
 import getStyles from './style';
 import { Ionicons } from '@expo/vector-icons';
 
+// Importe os contexts
+import { useCadastro } from '../../../contexts/CadastroContext';
+
 export default function Cadastro({ navigation }) {
   const [focusedInput, setFocusedInput] = useState(null);
   const { isDarkMode } = useTheme();
   const styles = getStyles(isDarkMode);
 
-  const [formData, setFormData] = useState({
-    nome: "", dataNasc: "", email: "", telefone: "", senha: "",
-  });
+  // Use o contexto de cadastro em vez do estado local
+  const { dadosCadastro, atualizarDados } = useCadastro();
+
   const [senhaVisivel, setSenhaVisivel] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const cad = (field, value) => setFormData(prev => ({ ...prev, [field]: value }));
+  // Função para atualizar dados no contexto
+  const cad = (field, value) => {
+    atualizarDados({ [field]: value });
+  };
 
   const handleInputFocus = (inputName) => {
     setFocusedInput(inputName);
@@ -38,7 +44,7 @@ export default function Cadastro({ navigation }) {
       formatted = formatted + '/' + cleaned.slice(4, 8);
     }
     
-    cad('dataNasc', formatted);
+    cad('dataNascimento', formatted);
   };
 
   // Formatar telefone
@@ -53,35 +59,36 @@ export default function Cadastro({ navigation }) {
       formatted = formatted + '-' + cleaned.slice(7, 11);
     }
     
-    cad('telefone', formatted);
+    cad('telefonePaciente', formatted);
   };
 
   // Validar campos obrigatórios
   const validarCampos = () => {
-    const { nome, dataNasc, email, telefone, senha } = formData;
+    const { nomePaciente, dataNascimento, emailPaciente, telefonePaciente, senhaPaciente } = dadosCadastro;
 
-    if (!nome || nome.length < 3) {
+     console.log("Verificando campos:", dadosCadastro); // Debug dos dados
+    if (!nomePaciente || nomePaciente.length < 3) {
       Alert.alert('⚠️', 'Nome inválido');
       return false;
     }
 
-    if (!dataNasc || dataNasc.length !== 10) {
+    if (!dataNascimento || dataNascimento.length !== 10) {
       Alert.alert('⚠️', 'Data de nascimento inválida');
       return false;
     }
 
-    if (!email || !email.includes('@') || !email.includes('.')) {
+    if (!emailPaciente || !emailPaciente.includes('@') || !emailPaciente.includes('.')) {
       Alert.alert('⚠️', 'Email inválido');
       return false;
     }
 
-    if (!telefone || telefone.length < 14) {
+    if (!telefonePaciente || telefonePaciente.length < 14) {
       Alert.alert('⚠️', 'Telefone inválido');
       return false;
     }
 
-    if (!senha || senha.length < 8) {
-      Alert.alert('⚠️', 'Senha deve ter pelo menos 8 caracteres');
+    if (!senhaPaciente || senhaPaciente.length < 4) { // Mudei para 4 conforme sua API
+      Alert.alert('⚠️', 'Senha deve ter pelo menos 4 caracteres');
       return false;
     }
 
@@ -90,23 +97,43 @@ export default function Cadastro({ navigation }) {
 
   // Função para continuar o cadastro
   const continuarCadastro = async () => {
-    if (!validarCampos()) return;
+    if (!validarCampos()) {
+      console.log('deu erro')
+      return
+    };
+    
 
     try {
       setLoading(true);
       
-      // Aqui você integraria com sua API de cadastro
-      Alert.alert('✅', 'Dados pessoais salvos com sucesso!');
+      // Converter data de DD/MM/AAAA para AAAA-MM-DD (formato da API)
+      const dataFormatada = converterDataParaAPI(dadosCadastro.dataNascimento);
       
-      // Navegar para próxima tela do cadastro (Cadastro2)
+      // Atualizar a data no formato correto
+      atualizarDados({ dataNascimento: dataFormatada });
+      
+      Alert.alert('✅', 'Dados pessoais salvos!');
+      
+      // Navegar para próxima tela do cadastro
       navigation.navigate('Cadastro2');
       
     } catch (error) {
-      console.log("❌ Erro ao salvar dados:", error);
-      Alert.alert("❌", "Erro ao salvar dados pessoais");
+      console.log("❌ Erro:", error);
+      Alert.alert("❌", "Erro ao salvar dados");
     } finally {
       setLoading(false);
     }
+  };
+
+  // Função para converter data
+  const converterDataParaAPI = (dataDDMMAAAA) => {
+    if (!dataDDMMAAAA) return '';
+    
+    const partes = dataDDMMAAAA.split('/');
+    if (partes.length === 3) {
+      return `${partes[2]}-${partes[1]}-${partes[0]}`; // AAAA-MM-DD
+    }
+    return dataDDMMAAAA;
   };
 
   return (
@@ -138,22 +165,22 @@ export default function Cadastro({ navigation }) {
               <Text style={styles.label}>Nome Completo</Text>
               <View style={[
                 styles.textInputWrapper,
-                focusedInput === 'nome' && styles.inputFocused,
-                formData.nome && styles.inputValid
+                focusedInput === 'nomePaciente' && styles.inputFocused,
+                dadosCadastro.nomePaciente && styles.inputValid
               ]}>
                 <Ionicons 
                   name="person-outline" 
                   size={20} 
-                  color={focusedInput === 'nome' ? '#186858ff' : '#999'} 
+                  color={focusedInput === 'nomePaciente' ? '#186858ff' : '#999'} 
                   style={styles.inputIcon}
                 />
                 <TextInput
                   style={styles.textInput}
                   placeholder="Seu nome completo"
                   placeholderTextColor={isDarkMode ? '#888' : '#666'}
-                  onChangeText={(text) => cad('nome', text)}
-                  value={formData.nome}
-                  onFocus={() => handleInputFocus('nome')}
+                  onChangeText={(text) => cad('nomePaciente', text)}
+                  value={dadosCadastro.nomePaciente}
+                  onFocus={() => handleInputFocus('nomePaciente')}
                   onBlur={handleInputBlur}
                   autoCapitalize="words"
                 />
@@ -165,13 +192,13 @@ export default function Cadastro({ navigation }) {
               <Text style={styles.label}>Email</Text>
               <View style={[
                 styles.textInputWrapper,
-                focusedInput === 'email' && styles.inputFocused,
-                formData.email && styles.inputValid
+                focusedInput === 'emailPaciente' && styles.inputFocused,
+                dadosCadastro.emailPaciente && styles.inputValid
               ]}>
                 <Ionicons 
                   name="mail-outline" 
                   size={20} 
-                  color={focusedInput === 'email' ? '#186858ff' : '#999'} 
+                  color={focusedInput === 'emailPaciente' ? '#186858ff' : '#999'} 
                   style={styles.inputIcon}
                 />
                 <TextInput
@@ -179,9 +206,9 @@ export default function Cadastro({ navigation }) {
                   placeholder="seu@email.com"
                   placeholderTextColor={isDarkMode ? '#888' : '#666'}
                   keyboardType="email-address"
-                  onChangeText={(text) => cad('email', text)}
-                  value={formData.email}
-                  onFocus={() => handleInputFocus('email')}
+                  onChangeText={(text) => cad('emailPaciente', text)}
+                  value={dadosCadastro.emailPaciente}
+                  onFocus={() => handleInputFocus('emailPaciente')}
                   onBlur={handleInputBlur}
                   autoCapitalize="none"
                 />
@@ -193,13 +220,13 @@ export default function Cadastro({ navigation }) {
               <Text style={styles.label}>Data de Nascimento</Text>
               <View style={[
                 styles.textInputWrapper,
-                focusedInput === 'dataNasc' && styles.inputFocused,
-                formData.dataNasc && styles.inputValid
+                focusedInput === 'dataNascimento' && styles.inputFocused,
+                dadosCadastro.dataNascimento && styles.inputValid
               ]}>
                 <Ionicons 
                   name="calendar-outline" 
                   size={20} 
-                  color={focusedInput === 'dataNasc' ? '#186858ff' : '#999'} 
+                  color={focusedInput === 'dataNascimento' ? '#186858ff' : '#999'} 
                   style={styles.inputIcon}
                 />
                 <TextInput
@@ -208,8 +235,8 @@ export default function Cadastro({ navigation }) {
                   placeholderTextColor={isDarkMode ? '#888' : '#666'}
                   keyboardType="numeric"
                   onChangeText={formatarDataNasc}
-                  value={formData.dataNasc}
-                  onFocus={() => handleInputFocus('dataNasc')}
+                  value={dadosCadastro.dataNascimento}
+                  onFocus={() => handleInputFocus('dataNascimento')}
                   onBlur={handleInputBlur}
                   maxLength={10}
                 />
@@ -221,13 +248,13 @@ export default function Cadastro({ navigation }) {
               <Text style={styles.label}>Telefone</Text>
               <View style={[
                 styles.textInputWrapper,
-                focusedInput === 'telefone' && styles.inputFocused,
-                formData.telefone && styles.inputValid
+                focusedInput === 'telefonePaciente' && styles.inputFocused,
+                dadosCadastro.telefonePaciente && styles.inputValid
               ]}>
                 <Ionicons 
                   name="phone-portrait-outline" 
                   size={20} 
-                  color={focusedInput === 'telefone' ? '#186858ff' : '#999'} 
+                  color={focusedInput === 'telefonePaciente' ? '#186858ff' : '#999'} 
                   style={styles.inputIcon}
                 />
                 <TextInput
@@ -236,8 +263,8 @@ export default function Cadastro({ navigation }) {
                   placeholderTextColor={isDarkMode ? '#888' : '#666'}
                   keyboardType="phone-pad"
                   onChangeText={formatarTelefone}
-                  value={formData.telefone}
-                  onFocus={() => handleInputFocus('telefone')}
+                  value={dadosCadastro.telefonePaciente}
+                  onFocus={() => handleInputFocus('telefonePaciente')}
                   onBlur={handleInputBlur}
                   maxLength={15}
                 />
@@ -249,25 +276,24 @@ export default function Cadastro({ navigation }) {
               <Text style={styles.label}>Senha</Text>
               <View style={[
                 styles.senhaWrapper,
-                focusedInput === 'senha' && styles.inputFocused,
-                formData.senha.length >= 8 && styles.inputValid
+                focusedInput === 'senhaPaciente' && styles.inputFocused,
+                dadosCadastro.senhaPaciente.length >= 4 && styles.inputValid
               ]}>
                 <Ionicons 
                   name="lock-closed-outline" 
                   size={20} 
-                  color={focusedInput === 'senha' ? '#186858ff' : '#999'} 
+                  color={focusedInput === 'senhaPaciente' ? '#186858ff' : '#999'} 
                   style={styles.inputIcon}
                 />
                 <TextInput
                   style={styles.senhaInput}
-                  placeholder="Mínimo 8 caracteres"
+                  placeholder="Mínimo 4 caracteres"
                   placeholderTextColor={isDarkMode ? '#888' : '#666'}
                   secureTextEntry={!senhaVisivel}
-                  onChangeText={(text) => cad('senha', text)}
-                  value={formData.senha}
-                  onFocus={() => handleInputFocus('senha')}
+                  onChangeText={(text) => cad('senhaPaciente', text)}
+                  value={dadosCadastro.senhaPaciente}
+                  onFocus={() => handleInputFocus('senhaPaciente')}
                   onBlur={handleInputBlur}
-                  maxLength={8}
                 />
                 <TouchableOpacity 
                   onPress={() => setSenhaVisivel(!senhaVisivel)} 
@@ -280,7 +306,7 @@ export default function Cadastro({ navigation }) {
                   />
                 </TouchableOpacity>
               </View>
-              <Text style={styles.passwordHint}>Mínimo 8 caracteres</Text>
+              <Text style={styles.passwordHint}>Mínimo 4 caracteres</Text>
             </View>
 
             {/* Botão de continuar */}

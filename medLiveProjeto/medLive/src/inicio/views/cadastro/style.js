@@ -325,5 +325,39 @@ export default function getStyles(isDarkMode) {
         color: '#6247AA',
         fontWeight: '600',
         },
+        // Adicione estas styles ao seu arquivo de estilos
+dadosResumo: {
+  backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+  padding: 15,
+  borderRadius: 10,
+  marginBottom: 20,
+  borderLeftWidth: 4,
+  borderLeftColor: '#6247AA',
+},
+dadosTitulo: {
+  color: isDarkMode ? '#fff' : '#333',
+  fontSize: 16,
+  fontWeight: 'bold',
+  marginBottom: 10,
+},
+dadosItem: {
+  color: isDarkMode ? '#ccc' : '#666',
+  fontSize: 14,
+  marginBottom: 5,
+},
+alertContainer: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  backgroundColor: 'rgba(255,165,0,0.2)',
+  padding: 10,
+  borderRadius: 5,
+  marginTop: 10,
+},
+alertText: {
+  color: '#FFA500',
+  marginLeft: 10,
+  fontSize: 12,
+  flex: 1,
+},
   });
 }

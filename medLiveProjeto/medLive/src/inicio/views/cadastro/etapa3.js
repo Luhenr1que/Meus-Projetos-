@@ -5,21 +5,17 @@ import { useTheme } from '../../../../themeContext';
 import getStyles from './style';
 import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
 
+// ✅ CORREÇÃO: Importar o contexto
+import { useCadastro } from '../../../contexts/CadastroContext';
+
 export default function Cadastro3({ navigation, route }) {
   const [focusedInput, setFocusedInput] = useState(null);
   const { isDarkMode } = useTheme();
   const styles = getStyles(isDarkMode);
 
-  // Receber dados da tela anterior se existirem
-  const dadosAnteriores = route.params?.formData || {};
-  
-  const [formData, setFormData] = useState({
-    ...dadosAnteriores,
-    peso: "",
-    altura: "",
-    tipoSanguineo: ""
-  });
-  
+  // ✅ CORREÇÃO: Usar o contexto em vez de estado local
+  const { dadosCadastro, atualizarDados } = useCadastro();
+
   const [loading, setLoading] = useState(false);
 
   // Refs para os inputs
@@ -29,7 +25,10 @@ export default function Cadastro3({ navigation, route }) {
     tipoSanguineo: useRef(null)
   };
 
-  const cad = (field, value) => setFormData(prev => ({ ...prev, [field]: value }));
+  // ✅ CORREÇÃO: Atualizar direto no contexto
+  const cad = (field, value) => {
+    atualizarDados({ [field]: value });
+  };
 
   const handleInputFocus = (inputName) => {
     setFocusedInput(inputName);
@@ -39,28 +38,14 @@ export default function Cadastro3({ navigation, route }) {
     setFocusedInput(null);
   };
 
-  // Formatar altura
-  const formatarAltura = (text) => {
-    const cleaned = text.replace(/\D/g, '');
-    if (cleaned.length > 0) {
-      if (cleaned.length <= 2) {
-        cad("altura", cleaned + " m");
-      } else {
-        cad("altura", cleaned + " cm");
-      }
-    } else {
-      cad("altura", "");
-    }
+  // ✅ CORREÇÃO: Salvar altura exatamente como digitado
+  const handleAlturaChange = (text) => {
+    cad("altura", text); // Salva exatamente o que foi digitado
   };
 
-  // Formatar peso
-  const formatarPeso = (text) => {
-    const cleaned = text.replace(/\D/g, '');
-    if (cleaned.length > 0) {
-      cad("peso", cleaned + " kg");
-    } else {
-      cad("peso", "");
-    }
+  // ✅ CORREÇÃO: Salvar peso exatamente como digitado
+  const handlePesoChange = (text) => {
+    cad("peso", text); // Salva exatamente o que foi digitado
   };
 
   // Tipos sanguíneos pré-definidos
@@ -68,38 +53,55 @@ export default function Cadastro3({ navigation, route }) {
 
   // Validar campos obrigatórios
   const validarCampos = () => {
-    const { peso, altura, tipoSanguineo } = formData;
+    const { peso, altura, tipoSanguineo } = dadosCadastro;
 
-    if (!peso || peso.length < 2) {
-      Alert.alert('⚠️', 'Peso inválido');
+    if (!peso || peso.trim().length === 0) {
+      Alert.alert('⚠️', 'Peso é obrigatório');
       return false;
     }
 
-    if (!altura || altura.length < 2) {
-      Alert.alert('⚠️', 'Altura inválida');
+    if (!altura || altura.trim().length === 0) {
+      Alert.alert('⚠️', 'Altura é obrigatória');
       return false;
     }
 
     if (!tipoSanguineo || tipoSanguineo.length < 2) {
-      Alert.alert('⚠️', 'Tipo sanguíneo inválido');
+      Alert.alert('⚠️', 'Tipo sanguíneo é obrigatório');
+      return false;
+    }
+
+    // ✅ CORREÇÃO: Validações mais flexíveis
+    const pesoNum = parseFloat(peso.replace(',', '.')); // Suporta decimal
+    const alturaNum = parseFloat(altura.replace(',', '.')); // Suporta decimal
+
+    if (isNaN(pesoNum) || pesoNum < 1 || pesoNum > 300) {
+      Alert.alert('⚠️', 'Peso deve ser um número entre 1 e 300');
+      return false;
+    }
+
+    if (isNaN(alturaNum) || alturaNum < 0.5 || alturaNum > 2.5) {
+      Alert.alert('⚠️', 'Altura deve ser um número entre 0.5 e 2.5 metros');
       return false;
     }
 
     return true;
   };
 
-  // Função para continuar o cadastro
+  // ✅ CORREÇÃO: Função simplificada
   const continuarCadastro = async () => {
     if (!validarCampos()) return;
 
     try {
       setLoading(true);
       
-      // Aqui você integraria com sua API de cadastro
-      Alert.alert('✅', 'Informações de saúde salvas com sucesso!');
+      console.log('📋 Dados de saúde salvos (exatamente como digitado):', {
+        peso: dadosCadastro.peso,
+        altura: dadosCadastro.altura,
+        tipoSanguineo: dadosCadastro.tipoSanguineo
+      });
       
-      // Navegar para próxima tela do cadastro
-      navigation.navigate('Cadastro4', { formData });
+      // ✅ CORREÇÃO: Navegar sem duplicar dados
+      navigation.navigate('Cadastro4');
       
     } catch (error) {
       console.log("❌ Erro ao salvar dados:", error);
@@ -139,7 +141,7 @@ export default function Cadastro3({ navigation, route }) {
               <View style={[
                 styles.textInputWrapper,
                 focusedInput === 'peso' && styles.inputFocused,
-                formData.peso && styles.inputValid
+                dadosCadastro.peso && styles.inputValid
               ]}>
                 <MaterialCommunityIcons
                   name="weight-kilogram" 
@@ -150,15 +152,20 @@ export default function Cadastro3({ navigation, route }) {
                 <TextInput
                   ref={inputRefs.peso}
                   style={styles.textInput}
-                  placeholder="70 kg"
+                  placeholder="Ex: 70, 70.5, 68.2"
                   placeholderTextColor={isDarkMode ? '#888' : '#666'}
-                  keyboardType="numeric"
-                  onChangeText={formatarPeso}
-                  value={formData.peso}
+                  keyboardType="decimal-pad" // ✅ Permite números decimais
+                  onChangeText={handlePesoChange}
+                  value={dadosCadastro.peso || ""} // ✅ Mostra exatamente o que foi salvo
                   onFocus={() => handleInputFocus('peso')}
                   onBlur={handleInputBlur}
                 />
               </View>
+              {dadosCadastro.peso && (
+                <Text style={styles.helperText}>
+                  Salvo: {dadosCadastro.peso} (exatamente como digitado)
+                </Text>
+              )}
             </View>
 
             {/* Campo Altura */}
@@ -167,7 +174,7 @@ export default function Cadastro3({ navigation, route }) {
               <View style={[
                 styles.textInputWrapper,
                 focusedInput === 'altura' && styles.inputFocused,
-                formData.altura && styles.inputValid
+                dadosCadastro.altura && styles.inputValid
               ]}>
                 <FontAwesome5
                   name="ruler-vertical" 
@@ -178,15 +185,20 @@ export default function Cadastro3({ navigation, route }) {
                 <TextInput
                   ref={inputRefs.altura}
                   style={styles.textInput}
-                  placeholder="175 cm"
+                  placeholder="Ex: 1.75, 1.80, 165 cm"
                   placeholderTextColor={isDarkMode ? '#888' : '#666'}
-                  keyboardType="numeric"
-                  onChangeText={formatarAltura}
-                  value={formData.altura}
+                  keyboardType="decimal-pad" // ✅ Permite números decimais
+                  onChangeText={handleAlturaChange}
+                  value={dadosCadastro.altura || ""} // ✅ Mostra exatamente o que foi salvo
                   onFocus={() => handleInputFocus('altura')}
                   onBlur={handleInputBlur}
                 />
               </View>
+              {dadosCadastro.altura && (
+                <Text style={styles.helperText}>
+                  Salvo: {dadosCadastro.altura} (exatamente como digitado)
+                </Text>
+              )}
             </View>
 
             {/* Campo Tipo Sanguíneo */}
@@ -206,12 +218,12 @@ export default function Cadastro3({ navigation, route }) {
                       onPress={() => cad('tipoSanguineo', tipo)}
                       style={[
                         styles.tipoSanguineoBtn,
-                        formData.tipoSanguineo === tipo && styles.tipoSanguineoBtnSelected
+                        dadosCadastro.tipoSanguineo === tipo && styles.tipoSanguineoBtnSelected
                       ]}
                     >
                       <Text style={[
                         styles.tipoSanguineoText,
-                        formData.tipoSanguineo === tipo && styles.tipoSanguineoTextSelected
+                        dadosCadastro.tipoSanguineo === tipo && styles.tipoSanguineoTextSelected
                       ]}>
                         {tipo}
                       </Text>
@@ -220,11 +232,11 @@ export default function Cadastro3({ navigation, route }) {
                 </View>
               </ScrollView>
 
-              {/* Input para tipo sanguíneo (como fallback) */}
+              {/* Input para tipo sanguíneo */}
               <View style={[
                 styles.textInputWrapper,
                 focusedInput === 'tipoSanguineo' && styles.inputFocused,
-                formData.tipoSanguineo && styles.inputValid
+                dadosCadastro.tipoSanguineo && styles.inputValid
               ]}>
                 <Ionicons 
                   name="water-outline" 
@@ -238,7 +250,7 @@ export default function Cadastro3({ navigation, route }) {
                   placeholder="A+, O-, etc."
                   placeholderTextColor={isDarkMode ? '#888' : '#666'}
                   onChangeText={(text) => cad('tipoSanguineo', text.toUpperCase())}
-                  value={formData.tipoSanguineo}
+                  value={dadosCadastro.tipoSanguineo || ""}
                   onFocus={() => handleInputFocus('tipoSanguineo')}
                   onBlur={handleInputBlur}
                   maxLength={3}
@@ -246,11 +258,19 @@ export default function Cadastro3({ navigation, route }) {
                 />
               </View>
               
-              {formData.tipoSanguineo && (
+              {dadosCadastro.tipoSanguineo && (
                 <Text style={styles.selecionadoText}>
-                  Tipo sanguíneo selecionado: {formData.tipoSanguineo}
+                  Tipo sanguíneo selecionado: {dadosCadastro.tipoSanguineo}
                 </Text>
               )}
+            </View>
+
+            {/* Instruções */}
+            <View style={styles.instrucoesContainer}>
+              <Text style={styles.instrucoesTitulo}>💡 Como preencher:</Text>
+              <Text style={styles.instrucoesTexto}>• Peso: Digite o valor em kg (ex: 70, 68.5, 75.2)</Text>
+              <Text style={styles.instrucoesTexto}>• Altura: Digite em metros (1.75) ou centímetros (175)</Text>
+              <Text style={styles.instrucoesTexto}>• O sistema aceita números decimais usando ponto ou vírgula</Text>
             </View>
 
             {/* Botão de continuar */}

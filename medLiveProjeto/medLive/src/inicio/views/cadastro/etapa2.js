@@ -3,27 +3,19 @@ import { View, ScrollView, TextInput, Text, Pressable, Image, Dimensions, Alert,
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../../../../themeContext';
 import getStyles from './style';
-import { Ionicons, MaterialCommunityIcons,FontAwesome5 } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
+import { useApi } from '../../../../crud';
+import { useCadastro } from '../../../contexts/CadastroContext'; // Importe o contexto
 
 export default function Cadastro2({ navigation, route }) {
   const [focusedInput, setFocusedInput] = useState(null);
   const { isDarkMode } = useTheme();
   const styles = getStyles(isDarkMode);
+  const { cadastrarPaciente } = useApi();
 
-  // Receber dados da tela anterior se existirem
-  const dadosAnteriores = route.params?.formData || {};
-  
-  const [formData, setFormData] = useState({
-    ...dadosAnteriores,
-    cep: "", 
-    logradouro: "", 
-    numero: "", 
-    complemento: "", 
-    bairro: "", 
-    cidade: "", 
-    estado: ""
-  });
-  
+  // Use o contexto em vez de route.params
+  const { dadosCadastro, atualizarDados } = useCadastro();
+
   const [loadingCep, setLoadingCep] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -37,7 +29,10 @@ export default function Cadastro2({ navigation, route }) {
     cidade: useRef(null)
   };
 
-  const cad = (field, value) => setFormData(prev => ({ ...prev, [field]: value }));
+  // Atualizar dados no contexto
+  const cad = (field, value) => {
+    atualizarDados({ [field]: value });
+  };
 
   const handleInputFocus = (inputName) => {
     setFocusedInput(inputName);
@@ -80,13 +75,13 @@ export default function Cadastro2({ navigation, route }) {
         return;
       }
       
-      setFormData(prev => ({
-        ...prev,
+      // Atualizar múltiplos campos no contexto
+      atualizarDados({
         logradouro: data.logradouro || '',
         bairro: data.bairro || '',
         cidade: data.localidade || '',
         estado: data.uf || ''
-      }));
+      });
       
       // Focar no próximo campo após buscar CEP
       if (inputRefs.numero.current) {
@@ -103,7 +98,7 @@ export default function Cadastro2({ navigation, route }) {
 
   // Validar campos obrigatórios
   const validarCampos = () => {
-    const { cep, logradouro, numero, bairro, cidade, estado } = formData;
+    const { cep, logradouro, numero, bairro, cidade, estado } = dadosCadastro;
 
     if (!cep || cep.length !== 9) {
       Alert.alert('⚠️', 'CEP inválido');
@@ -143,13 +138,10 @@ export default function Cadastro2({ navigation, route }) {
     if (!validarCampos()) return;
 
     try {
-      setLoading(true);
+      console.log('Dados do endereço salvos:', dadosCadastro);
       
-      // Aqui você integraria com sua API de cadastro
-      Alert.alert('✅', 'Endereço salvo com sucesso!');
-      
-      // Navegar para próxima tela do cadastro com todos os dados
-      navigation.navigate('Cadastro3', { formData });
+      // Navegar para próxima tela - os dados já estão no contexto
+      navigation.navigate('Cadastro3');
       
     } catch (error) {
       console.log("❌ Erro ao salvar dados:", error);
@@ -159,6 +151,7 @@ export default function Cadastro2({ navigation, route }) {
     }
   };
 
+  // Nos seus TextInputs, use dadosCadastro em vez de formData
   return (
     <LinearGradient
       colors={isDarkMode ? ['#2D1B69', '#6247AA'] : ['#6247AA', '#856BCC']}
@@ -189,7 +182,7 @@ export default function Cadastro2({ navigation, route }) {
               <View style={[
                 styles.textInputWrapper,
                 focusedInput === 'cep' && styles.inputFocused,
-                formData.cep.length === 9 && styles.inputValid
+                dadosCadastro.cep && dadosCadastro.cep.length === 9 && styles.inputValid
               ]}>
                 <Ionicons 
                   name="location-outline" 
@@ -204,7 +197,7 @@ export default function Cadastro2({ navigation, route }) {
                   placeholderTextColor={isDarkMode ? '#888' : '#666'}
                   keyboardType="numeric"
                   onChangeText={formatarCep}
-                  value={formData.cep}
+                  value={dadosCadastro.cep || ""}
                   onFocus={() => handleInputFocus('cep')}
                   onBlur={handleInputBlur}
                   maxLength={9}
@@ -221,7 +214,7 @@ export default function Cadastro2({ navigation, route }) {
               <View style={[
                 styles.textInputWrapper,
                 focusedInput === 'logradouro' && styles.inputFocused,
-                formData.logradouro && styles.inputValid
+                dadosCadastro.logradouro && styles.inputValid
               ]}>
                 <FontAwesome5
                   name="road" 
@@ -235,7 +228,7 @@ export default function Cadastro2({ navigation, route }) {
                   placeholder="Rua, Avenida, etc."
                   placeholderTextColor={isDarkMode ? '#888' : '#666'}
                   onChangeText={(text) => cad('logradouro', text)}
-                  value={formData.logradouro}
+                  value={dadosCadastro.logradouro || ""}
                   onFocus={() => handleInputFocus('logradouro')}
                   onBlur={handleInputBlur}
                 />
@@ -250,7 +243,7 @@ export default function Cadastro2({ navigation, route }) {
                 <View style={[
                   styles.textInputWrapper,
                   focusedInput === 'numero' && styles.inputFocused,
-                  formData.numero && styles.inputValid
+                  dadosCadastro.numero && styles.inputValid
                 ]}>
                   <MaterialCommunityIcons
                     name='home-outline' 
@@ -265,7 +258,7 @@ export default function Cadastro2({ navigation, route }) {
                     placeholderTextColor={isDarkMode ? '#888' : '#666'}
                     keyboardType="numeric"
                     onChangeText={(text) => cad('numero', text)}
-                    value={formData.numero}
+                    value={dadosCadastro.numero || ""}
                     onFocus={() => handleInputFocus('numero')}
                     onBlur={handleInputBlur}
                   />
@@ -291,7 +284,7 @@ export default function Cadastro2({ navigation, route }) {
                     placeholder="Apto, Casa"
                     placeholderTextColor={isDarkMode ? '#888' : '#666'}
                     onChangeText={(text) => cad('complemento', text)}
-                    value={formData.complemento}
+                    value={dadosCadastro.complemento || ""}
                     onFocus={() => handleInputFocus('complemento')}
                     onBlur={handleInputBlur}
                   />
@@ -305,7 +298,7 @@ export default function Cadastro2({ navigation, route }) {
               <View style={[
                 styles.textInputWrapper,
                 focusedInput === 'bairro' && styles.inputFocused,
-                formData.bairro && styles.inputValid
+                dadosCadastro.bairro && styles.inputValid
               ]}>
                 <Ionicons 
                   name="navigate-outline" 
@@ -319,7 +312,7 @@ export default function Cadastro2({ navigation, route }) {
                   placeholder="Seu bairro"
                   placeholderTextColor={isDarkMode ? '#888' : '#666'}
                   onChangeText={(text) => cad('bairro', text)}
-                  value={formData.bairro}
+                  value={dadosCadastro.bairro || ""}
                   onFocus={() => handleInputFocus('bairro')}
                   onBlur={handleInputBlur}
                 />
@@ -334,7 +327,7 @@ export default function Cadastro2({ navigation, route }) {
                 <View style={[
                   styles.textInputWrapper,
                   focusedInput === 'cidade' && styles.inputFocused,
-                  formData.cidade && styles.inputValid
+                  dadosCadastro.cidade && styles.inputValid
                 ]}>
                   <Ionicons 
                     name="business-outline" 
@@ -348,7 +341,7 @@ export default function Cadastro2({ navigation, route }) {
                     placeholder="Sua cidade"
                     placeholderTextColor={isDarkMode ? '#888' : '#666'}
                     onChangeText={(text) => cad('cidade', text)}
-                    value={formData.cidade}
+                    value={dadosCadastro.cidade || ""}
                     onFocus={() => handleInputFocus('cidade')}
                     onBlur={handleInputBlur}
                   />
@@ -356,12 +349,12 @@ export default function Cadastro2({ navigation, route }) {
               </View>
 
               {/* Estado */}
-              <View style={[styles.inputContainer, { flex: 1,marginTop: -24,marginBottom: 20 }]}>
+              <View style={[styles.inputContainer, { flex: 1, marginTop: -24, marginBottom: 20 }]}>
                 <Text style={styles.label}>UF</Text>
                 <View style={[
                   styles.textInputWrapper,
                   focusedInput === 'estado' && styles.inputFocused,
-                  formData.estado && styles.inputValid
+                  dadosCadastro.estado && styles.inputValid
                 ]}>
                   <Ionicons 
                     name="flag-outline" 
@@ -374,7 +367,7 @@ export default function Cadastro2({ navigation, route }) {
                     placeholder="UF"
                     placeholderTextColor={isDarkMode ? '#888' : '#666'}
                     onChangeText={(text) => cad('estado', text.toUpperCase())}
-                    value={formData.estado}
+                    value={dadosCadastro.estado || ""}
                     onFocus={() => handleInputFocus('estado')}
                     onBlur={handleInputBlur}
                     maxLength={2}
