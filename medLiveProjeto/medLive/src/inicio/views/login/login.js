@@ -4,6 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../../../../themeContext';
 import getStyles from './style';
 import { Ionicons } from '@expo/vector-icons';
+import { useApi } from '../../../../crud';
 
 export default function Login({ navigation }) {
   const [focusedInput, setFocusedInput] = useState(null);
@@ -14,6 +15,8 @@ export default function Login({ navigation }) {
   const [senhaVisivel, setSenhaVisivel] = useState(false);
   const { width, height } = Dimensions.get('window');
 
+  const loginPaciente = useApi()
+
   const cad = (field, value) => setFormData(prev => ({ ...prev, [field]: value }));
 
   const handleInputFocus = (inputName) => {
@@ -23,6 +26,19 @@ export default function Login({ navigation }) {
   const handleInputBlur = () => {
     setFocusedInput(null);
   };
+
+  const logar = async () => {
+    try {
+      await loginPaciente.loginPaciente({ email: formData.email, senha: formData.senha });
+      console.log('Login bem-sucedido:');
+      // Navegar para a tela principal ou outra ação após o login
+      navigation.navigate('Home');
+    } catch (error) {
+      console.error('Erro ao fazer login:', error.message);
+      // Exibir mensagem de erro para o usuário
+      alert('Erro ao fazer login: ' + error.message);
+    }
+  }
 
   return (
     <LinearGradient
@@ -121,7 +137,7 @@ export default function Login({ navigation }) {
             </Pressable>
 
             {/* Botão de login */}
-            <TouchableOpacity style={styles.loginButton}>
+            <TouchableOpacity onPress={()=>logar()} style={styles.loginButton}>
               <LinearGradient
                 colors={['#6247AA', '#856BCC']}
                 start={{ x: 0, y: 0 }}
