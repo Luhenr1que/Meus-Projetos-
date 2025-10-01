@@ -40,6 +40,7 @@ export default function Home({ navigation }) {
                 );
                 
                 console.log(`Encontradas ${frasesValidas.length} frases válidas`);
+                console.log('Frases válidas:', frasesValidas);
                 
                 if (frasesValidas.length > 0) {
                     // Seleciona uma frase aleatória
@@ -292,48 +293,11 @@ export default function Home({ navigation }) {
                         ))}
                     </View>
 
-                    <View style={styles.metasContainer}>
-                        <Text style={styles.metasTitulo}>Metas de Hoje</Text>
-                        <View style={styles.metasGrid}>
-                            <View style={styles.metaItem}>
-                                <View style={[styles.metaIcon, { backgroundColor: '#2563EB' }]}>
-                                    <FontAwesome5 name="glass-whiskey" size={20} color="#FFFFFF" />
-                                </View>
-                                <Text style={styles.metaTexto}>Água</Text>
-                                <Text style={styles.metaStatus}>2/8 copos</Text>
-                            </View>
-
-                            <View style={styles.metaItem}>
-                                <View style={[styles.metaIcon, { backgroundColor: '#059669' }]}>
-                                    <MaterialCommunityIcons name="walk" size={20} color="#FFFFFF" />
-                                </View>
-                                <Text style={styles.metaTexto}>Passos</Text>
-                                <Text style={styles.metaStatus}>1.2k/5k</Text>
-                            </View>
-
-                            <View style={styles.metaItem}>
-                                <View style={[styles.metaIcon, { backgroundColor: '#7C3AED' }]}>
-                                    <MaterialCommunityIcons name="meditation" size={20} color="#FFFFFF" />
-                                </View>
-                                <Text style={styles.metaTexto}>Meditação</Text>
-                                <Text style={styles.metaStatus}>0/10 min</Text>
-                            </View>
-
-                            <View style={styles.metaItem}>
-                                <View style={[styles.metaIcon, { backgroundColor: '#D97706' }]}>
-                                    <MaterialCommunityIcons name="food-apple" size={20} color="#FFFFFF" />
-                                </View>
-                                <Text style={styles.metaTexto}>Frutas</Text>
-                                <Text style={styles.metaStatus}>1/3 porções</Text>
-                            </View>
-                        </View>
-                    </View>
-
                     {/* Dica do dia */}
                     <View style={styles.dicaContainer}>
                         <View style={styles.dicaHeader}>
                             <Ionicons name="bulb" size={24} color="#F59E0B" />
-                            <Text style={styles.dicaTitulo}>Dica do Dia</Text>
+                            <Text style={styles.dicaTitulo}>Frase do Dia</Text>
                         </View>
                         <Text style={styles.dicaTexto}>
                             {carregando ? 'Carregando...' : dicaDoDia}
