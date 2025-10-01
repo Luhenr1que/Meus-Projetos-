@@ -6,7 +6,7 @@ import { ThemeProvider } from './themeContext';
 import { ApiProvider } from './crud';
 import { CadastroProvider } from './src/contexts/CadastroContext';
 
-import Home from './src/principal/views/home/home';
+import Home from './src/principal/home/home';
 import Login from './src/inicio/views/login/login';
 import Cadastro from './src/inicio/views/cadastro/cadastro';
 import Cadastro2 from './src/inicio/views/cadastro/etapa2';
@@ -22,7 +22,7 @@ export default function App() {
         <CadastroProvider>
           <NavigationContainer>
             <Stack.Navigator 
-              initialRouteName="Cadastro"
+              initialRouteName="Home"
               screenOptions={{ headerShown: false }}
             >
               <Stack.Screen name="Login" component={Login} />

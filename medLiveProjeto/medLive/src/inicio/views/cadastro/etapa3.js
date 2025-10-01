@@ -161,11 +161,6 @@ export default function Cadastro3({ navigation, route }) {
                   onBlur={handleInputBlur}
                 />
               </View>
-              {dadosCadastro.peso && (
-                <Text style={styles.helperText}>
-                  Salvo: {dadosCadastro.peso} (exatamente como digitado)
-                </Text>
-              )}
             </View>
 
             {/* Campo Altura */}
@@ -189,16 +184,11 @@ export default function Cadastro3({ navigation, route }) {
                   placeholderTextColor={isDarkMode ? '#888' : '#666'}
                   keyboardType="decimal-pad" // ✅ Permite números decimais
                   onChangeText={handleAlturaChange}
-                  value={dadosCadastro.altura || ""} // ✅ Mostra exatamente o que foi salvo
+                  value={dadosCadastro.altura || ""} 
                   onFocus={() => handleInputFocus('altura')}
                   onBlur={handleInputBlur}
                 />
               </View>
-              {dadosCadastro.altura && (
-                <Text style={styles.helperText}>
-                  Salvo: {dadosCadastro.altura} (exatamente como digitado)
-                </Text>
-              )}
             </View>
 
             {/* Campo Tipo Sanguíneo */}
@@ -263,14 +253,6 @@ export default function Cadastro3({ navigation, route }) {
                   Tipo sanguíneo selecionado: {dadosCadastro.tipoSanguineo}
                 </Text>
               )}
-            </View>
-
-            {/* Instruções */}
-            <View style={styles.instrucoesContainer}>
-              <Text style={styles.instrucoesTitulo}>💡 Como preencher:</Text>
-              <Text style={styles.instrucoesTexto}>• Peso: Digite o valor em kg (ex: 70, 68.5, 75.2)</Text>
-              <Text style={styles.instrucoesTexto}>• Altura: Digite em metros (1.75) ou centímetros (175)</Text>
-              <Text style={styles.instrucoesTexto}>• O sistema aceita números decimais usando ponto ou vírgula</Text>
             </View>
 
             {/* Botão de continuar */}
