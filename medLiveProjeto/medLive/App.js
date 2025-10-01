@@ -19,10 +19,10 @@ const Stack = createNativeStackNavigator();
 
 export default function App() {
   return (
-    <AudioProvider>
-      <ThemeProvider>
-        <ApiProvider>
-          <CadastroProvider>
+    <ThemeProvider>
+      <ApiProvider>
+        <CadastroProvider>
+          <AudioProvider>
             <NavigationContainer>
               <Stack.Navigator 
                 initialRouteName="Home"
@@ -37,9 +37,9 @@ export default function App() {
                 <Stack.Screen name="Meditacao" component={Meditacao} />
               </Stack.Navigator>
             </NavigationContainer>
-          </CadastroProvider>
-        </ApiProvider>
-      </ThemeProvider>
-    </AudioProvider>
+          </AudioProvider>
+        </CadastroProvider>
+      </ApiProvider>
+    </ThemeProvider>
   );
 }

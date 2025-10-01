@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, ScrollView, Text, TouchableOpacity, Modal } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Audio } from 'expo-av'; // IMPORTE O AUDIO AQUI
+import { Audio } from 'expo-av';
 import { useTheme } from '../../../themeContext';
 import { useAudio } from '../../../audioContext';
 import getStyles from './style';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 
 export default function Meditacao({ navigation }) {
-    const { playSomBot, pauseBackgroundMusic, resumeBackgroundMusic } = useAudio();
+    const { playSomBot, pauseBackgroundMusic, resumeBackgroundMusic, startBackgroundMusic, stopBackgroundMusic } = useAudio();
     const { isDarkMode } = useTheme();
     const styles = getStyles(isDarkMode);
 
@@ -17,6 +17,19 @@ export default function Meditacao({ navigation }) {
     const [currentMessage, setCurrentMessage] = useState('');
     const [currentMusicIndex, setCurrentMusicIndex] = useState(null);
     const [isPlaying, setIsPlaying] = useState(false);
+
+    // Inicia a música de fundo quando a tela carrega
+    useEffect(() => {
+        startBackgroundMusic();
+        
+        // Limpa ao sair da tela
+        return () => {
+            stopBackgroundMusic(); // ⭐ ADICIONE ESTA LINHA
+            if (currentSound) {
+                currentSound.unloadAsync();
+            }
+        };
+    }, []);
 
     const playMusic = async (music, index) => {
         try {
@@ -76,13 +89,10 @@ export default function Meditacao({ navigation }) {
     };
 
     const openMusicModal = (index) => {
-        // Toca o som do botão primeiro
         playSomBot();
-
         setCurrentMessage(musicPlay[index].msg);
         setModalVisible(true);
 
-        // Pequeno delay para garantir que a interação foi registrada
         setTimeout(() => {
             playMusic(musicPlay[index], index);
         }, 100);
@@ -94,7 +104,6 @@ export default function Meditacao({ navigation }) {
     };
 
     const handleBackPress = () => {
-        // Toca o som do botão e para qualquer música que esteja tocando
         playSomBot();
         stopMusic();
         setTimeout(() => {
@@ -103,75 +112,73 @@ export default function Meditacao({ navigation }) {
     };
 
     const musicPlay = [
-
         {
             song: require('../../../assets/music/Relaxing.mp3'),
             msg: 'Respire fundo... sinta o ar preenchendo seus pulmões e deixe que toda a tensão se dissolva lentamente.',
             volume: 1,
-            name: 'Solo'
+            name: 'Relaxamento Profundo'
         },
         {
-            song: require('../../../assets/music/Relaxing.mp3'),
+            song: require('../../../assets/music/meditate1.mp3'),
             msg: 'Cada inspiração acalma a mente, cada expiração libera o que não é mais necessário.',
-            volume: 0.5,
-            name: 'Touch'
+            volume: 1,
+            name: 'Respiração Consciente'
         },
         {
-            song: require('../../../assets/music/Relaxing.mp3'),
+            song: require('../../../assets/music/meditate2.mp3'),
             msg: 'Permita-se estar presente neste momento. Nada além do agora importa.',
             volume: 1,
-            name: 'Guns'
+            name: 'Momento Presente'
         },
         {
             song: require('../../../assets/music/Relaxing.mp3'),
             msg: 'Sinta a leveza no corpo e a paz na mente. Você está exatamente onde precisa estar.',
             volume: 1,
-            name: 'Lana'
+            name: 'Paz Interior'
         },
         {
             song: require('../../../assets/music/Relaxing.mp3'),
             msg: 'Deixe que cada som envolva você como uma onda tranquila, trazendo serenidade ao seu coração.',
             volume: 1,
-            name: 'Natural'
+            name: 'Ondas de Serenidade'
         },
         {
             song: require('../../../assets/music/Relaxing.mp3'),
             msg: 'Imagine uma luz suave te envolvendo, preenchendo todo o seu ser com calma e equilíbrio.',
             volume: 1,
-            name: 'Times'
+            name: 'Luz da Calma'
         },
         {
             song: require('../../../assets/music/Relaxing.mp3'),
             msg: 'Liberte-se das preocupações. Aqui e agora, só existe paz.',
             volume: 1,
-            name: 'Vício'
+            name: 'Libertação'
         },
         {
             song: require('../../../assets/music/Relaxing.mp3'),
             msg: 'Você é parte da natureza, e a natureza está em você. Sinta essa conexão profunda.',
             volume: 1,
-            name: 'Colapso'
+            name: 'Conexão Natural'
         },
         {
             song: require('../../../assets/music/Relaxing.mp3'),
             msg: 'Permita que seu corpo relaxe completamente, da cabeça aos pés. Cada músculo solta, cada pensamento desacelera.',
             volume: 1,
-            name: 'Hortelã'
+            name: 'Relaxamento Total'
         },
         {
             song: require('../../../assets/music/Relaxing.mp3'),
             msg: 'Neste silêncio, você encontra clareza. Nesta pausa, você encontra força.',
             volume: 1,
-            name: 'Auras'
+            name: 'Silêncio Interior'
         },
         {
             song: require('../../../assets/music/Relaxing.mp3'),
             msg: 'A gratidão preenche seu coração e transforma cada instante em um presente.',
             volume: 1,
-            name: 'Drunk'
+            name: 'Gratidão'
         }
     ];
-
 
     return (
         <LinearGradient
