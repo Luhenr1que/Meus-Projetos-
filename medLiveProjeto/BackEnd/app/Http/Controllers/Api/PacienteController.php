@@ -38,7 +38,7 @@ class PacienteController extends Controller
             'tipoSanguineo' => 'nullable|in:A+,A-,B+,B-,AB+,AB-,O+,O-',
             
             // Etapa 4 - Foto
-            'fotoPerfil' => 'nullable|string',
+            'fotoPerfil' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // máximo 2MB
             
         ], [
             // Dados Pessoais
@@ -74,6 +74,11 @@ class PacienteController extends Controller
             'altura.numeric' => 'Altura deve ser um número.',
             'altura.between' => 'Altura deve estar entre 0 e 3 metros.',
             'tipoSanguineo.in' => 'Tipo sanguíneo inválido.',
+            
+            // Foto
+            'fotoPerfil.image' => 'Arquivo enviado não é uma imagem válida.',
+            'fotoPerfil.mimes' => 'A imagem deve ser jpeg, png, jpg ou gif.',
+            'fotoPerfil.max' => 'A imagem não pode ter mais que 2MB.',
         ]);
 
         $paciente = new Paciente();
@@ -100,13 +105,14 @@ class PacienteController extends Controller
         $paciente->tipoSanguineo = $request->input('tipoSanguineo');
         
         // Etapa 4 - Foto (se enviada)
-        if ($request->has('fotoPerfil') && $request->fotoPerfil) {
-            $fotoPath = $this->salvarFotoBase64($request->fotoPerfil);
-            $paciente->fotoPerfil = $fotoPath;
+        if ($request->hasFile('fotoPerfil') && $request->file('fotoPerfil')->isValid()) {
+            $foto = $request->file('fotoPerfil');
+            $filename = 'perfil_' . time() . '_' . uniqid() . '.' . $foto->getClientOriginalExtension();
+            $path = $foto->storeAs('perfis', $filename, 'public');
+            $paciente->fotoPerfil = $path;
         }
         
         $paciente->status = 'ativo';
-
         $paciente->save();
 
         return response()->json([
@@ -114,39 +120,6 @@ class PacienteController extends Controller
             'message' => 'Paciente cadastrado com sucesso!',
             'paciente' => $paciente
         ], 201);
-    }
-
-    /**
-     * Salva foto em base64 no storage
-     */
-    private function salvarFotoBase64($base64String)
-    {
-        try {
-            // Verifica se é uma string base64 válida
-            if (strpos($base64String, 'data:image') === 0) {
-                $image = explode(',', $base64String);
-                $imageData = base64_decode($image[1]);
-                
-                // Detecta o tipo da imagem
-                $finfo = finfo_open(FILEINFO_MIME_TYPE);
-                $mimeType = finfo_buffer($finfo, $imageData);
-                finfo_close($finfo);
-                
-                $extension = explode('/', $mimeType)[1];
-                $filename = 'perfil_' . time() . '_' . uniqid() . '.' . $extension;
-                $path = 'perfis/' . $filename;
-                
-                Storage::disk('public')->put($path, $imageData);
-                
-                return $path;
-            }
-            
-            return $base64String; // Se já for um caminho, retorna como está
-            
-        } catch (\Exception $e) {
-            Log::error('Erro ao salvar foto: ' . $e->getMessage());
-            return null;
-        }
     }
 
     public function logar(Request $request)
@@ -200,4 +173,34 @@ class PacienteController extends Controller
             'paciente' => $request->user()
         ]);
     }
+    public function atualizarFoto(Request $request, $id)
+{
+    $request->validate([
+        'fotoPerfil' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+    ], [
+        'fotoPerfil.required' => 'Nenhuma imagem enviada.',
+        'fotoPerfil.image' => 'Arquivo enviado não é uma imagem válida.',
+        'fotoPerfil.mimes' => 'A imagem deve ser jpeg, png, jpg ou gif.',
+        'fotoPerfil.max' => 'A imagem não pode ter mais que 2MB.',
+    ]);
+
+    $paciente = Paciente::find($id);
+    if (!$paciente) {
+        return response()->json(['error' => 'Paciente não encontrado'], 404);
+    }
+
+    if ($request->hasFile('fotoPerfil') && $request->file('fotoPerfil')->isValid()) {
+        $foto = $request->file('fotoPerfil');
+        $filename = 'perfil_' . time() . '_' . uniqid() . '.' . $foto->getClientOriginalExtension();
+        $path = $foto->storeAs('perfis', $filename, 'public');
+        $paciente->fotoPerfil = $path;
+        $paciente->save();
+    }
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Foto atualizada com sucesso!',
+        'paciente' => $paciente
+    ]);
+}
 }

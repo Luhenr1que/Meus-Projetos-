@@ -1,299 +1,150 @@
 import React, { useState, useRef } from 'react';
-import { View, ScrollView, TextInput, Text, Pressable, Image, Dimensions, Alert, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { View, ScrollView, TextInput, Text, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../../../../themeContext';
 import getStyles from './style';
-import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
-
-// ✅ CORREÇÃO: Importar o contexto
 import { useCadastro } from '../../../contexts/CadastroContext';
+import { useApi } from '../../../../crud';
+import { MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
 
-export default function Cadastro3({ navigation, route }) {
-  const [focusedInput, setFocusedInput] = useState(null);
+export default function Cadastro3({ navigation }) {
   const { isDarkMode } = useTheme();
   const styles = getStyles(isDarkMode);
-
-  // ✅ CORREÇÃO: Usar o contexto em vez de estado local
   const { dadosCadastro, atualizarDados } = useCadastro();
+  const { cadastrarPaciente } = useApi();
 
   const [loading, setLoading] = useState(false);
+  const [focusedInput, setFocusedInput] = useState(null);
 
-  // Refs para os inputs
   const inputRefs = {
     peso: useRef(null),
     altura: useRef(null),
     tipoSanguineo: useRef(null)
   };
 
-  // ✅ CORREÇÃO: Atualizar direto no contexto
-  const cad = (field, value) => {
-    atualizarDados({ [field]: value });
-  };
-
-  const handleInputFocus = (inputName) => {
-    setFocusedInput(inputName);
-  };
-
-  const handleInputBlur = () => {
-    setFocusedInput(null);
-  };
-
-  // ✅ CORREÇÃO: Salvar altura exatamente como digitado
-  const handleAlturaChange = (text) => {
-    cad("altura", text); // Salva exatamente o que foi digitado
-  };
-
-  // ✅ CORREÇÃO: Salvar peso exatamente como digitado
-  const handlePesoChange = (text) => {
-    cad("peso", text); // Salva exatamente o que foi digitado
-  };
-
-  // Tipos sanguíneos pré-definidos
   const tiposSanguineos = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
-  // Validar campos obrigatórios
+  const cad = (field, value) => atualizarDados({ [field]: value });
+
   const validarCampos = () => {
-    const { peso, altura, tipoSanguineo } = dadosCadastro;
+    const { peso, altura, tipoSanguineo, nomePaciente, emailPaciente, telefonePaciente, senhaPaciente, dataNascimento } = dadosCadastro;
 
-    if (!peso || peso.trim().length === 0) {
-      Alert.alert('⚠️', 'Peso é obrigatório');
+    if (!nomePaciente || !emailPaciente || !telefonePaciente || !senhaPaciente || !dataNascimento) {
+      Alert.alert('⚠️', 'Preencha todos os campos obrigatórios.');
       return false;
     }
 
-    if (!altura || altura.trim().length === 0) {
-      Alert.alert('⚠️', 'Altura é obrigatória');
-      return false;
-    }
-
-    if (!tipoSanguineo || tipoSanguineo.length < 2) {
-      Alert.alert('⚠️', 'Tipo sanguíneo é obrigatório');
-      return false;
-    }
-
-    // ✅ CORREÇÃO: Validações mais flexíveis
-    const pesoNum = parseFloat(peso.replace(',', '.')); // Suporta decimal
-    const alturaNum = parseFloat(altura.replace(',', '.')); // Suporta decimal
-
-    if (isNaN(pesoNum) || pesoNum < 1 || pesoNum > 300) {
-      Alert.alert('⚠️', 'Peso deve ser um número entre 1 e 300');
-      return false;
-    }
-
-    if (isNaN(alturaNum) || alturaNum < 0.5 || alturaNum > 2.5) {
-      Alert.alert('⚠️', 'Altura deve ser um número entre 0.5 e 2.5 metros');
-      return false;
-    }
+    const pesoNum = parseFloat(peso.replace(',', '.'));
+    const alturaNum = parseFloat(altura.replace(',', '.'));
+    if (isNaN(pesoNum) || pesoNum < 1 || pesoNum > 300) { Alert.alert('⚠️', 'Peso inválido'); return false; }
+    if (isNaN(alturaNum) || alturaNum < 0.5 || alturaNum > 2.5) { Alert.alert('⚠️', 'Altura inválida'); return false; }
+    if (!tipoSanguineo || tipoSanguineo.length < 2) { Alert.alert('⚠️', 'Tipo sanguíneo obrigatório'); return false; }
 
     return true;
   };
 
-  // ✅ CORREÇÃO: Função simplificada
-  const continuarCadastro = async () => {
+  const finalizarCadastro = async () => {
     if (!validarCampos()) return;
 
     try {
       setLoading(true);
-      
-      console.log('📋 Dados de saúde salvos (exatamente como digitado):', {
-        peso: dadosCadastro.peso,
-        altura: dadosCadastro.altura,
-        tipoSanguineo: dadosCadastro.tipoSanguineo
+
+      const formData = new FormData();
+      Object.keys(dadosCadastro).forEach(key => {
+        if (dadosCadastro[key] != null) formData.append(key, String(dadosCadastro[key]));
       });
-      
-      // ✅ CORREÇÃO: Navegar sem duplicar dados
+
+      const response = await cadastrarPaciente(formData);
+      console.log('✅ Cadastro realizado:', response);
+
+      // Salva id do paciente para uso no Cadastro4
+      atualizarDados({ idPaciente: response.paciente.idPaciente });
+
+      // Navegar para Cadastro4
       navigation.navigate('Cadastro4');
-      
+
     } catch (error) {
-      console.log("❌ Erro ao salvar dados:", error);
-      Alert.alert("❌", "Erro ao salvar informações de saúde");
+      console.error(error);
+      Alert.alert('Erro', 'Falha ao cadastrar paciente.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <LinearGradient
-      colors={isDarkMode ? ['#2D1B69', '#6247AA'] : ['#6247AA', '#856BCC']}
-      style={{ flex: 1 }}
-    >
-      <ScrollView
-        contentContainerStyle={{ flexGrow: 1 }}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
+    <LinearGradient colors={isDarkMode ? ['#2D1B69', '#6247AA'] : ['#6247AA', '#856BCC']} style={{ flex: 1 }}>
+      <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
         <View style={styles.container}>
-          {/* Header com Logo */}
-          <View style={styles.header}>
-            <Image 
-              source={require('../../../../assets/img/medLiveLogo.png')} 
-              style={styles.logo}
-              resizeMode="contain"
-            />
-            <Text style={styles.titulo}>Informações de Saúde</Text>
-            <Text style={styles.subtitle}>Informe seus dados de saúde</Text>
+          <Text style={styles.titulo}>Informações de Saúde</Text>
+          <Text style={styles.subtitle}>Preencha seus dados de saúde para continuar</Text>
+
+          {/* Peso */}
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Peso</Text>
+            <View style={[styles.textInputWrapper, focusedInput === 'peso' && styles.inputFocused]}>
+              <MaterialCommunityIcons name="weight-kilogram" size={20} color="#999" style={styles.inputIcon} />
+              <TextInput
+                ref={inputRefs.peso}
+                style={styles.textInput}
+                placeholder="Ex: 70, 70.5"
+                placeholderTextColor={isDarkMode ? '#888' : '#666'}
+                keyboardType="decimal-pad"
+                onChangeText={text => cad('peso', text)}
+                value={dadosCadastro.peso || ''}
+                onFocus={() => setFocusedInput('peso')}
+                onBlur={() => setFocusedInput(null)}
+              />
+            </View>
           </View>
 
-          {/* Formulário */}
-          <View style={styles.formContainer}>
-            {/* Campo Peso */}
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Peso</Text>
-              <View style={[
-                styles.textInputWrapper,
-                focusedInput === 'peso' && styles.inputFocused,
-                dadosCadastro.peso && styles.inputValid
-              ]}>
-                <MaterialCommunityIcons
-                  name="weight-kilogram" 
-                  size={20} 
-                  color={focusedInput === 'peso' ? '#186858ff' : '#999'} 
-                  style={styles.inputIcon}
-                />
-                <TextInput
-                  ref={inputRefs.peso}
-                  style={styles.textInput}
-                  placeholder="Ex: 70, 70.5, 68.2"
-                  placeholderTextColor={isDarkMode ? '#888' : '#666'}
-                  keyboardType="decimal-pad" // ✅ Permite números decimais
-                  onChangeText={handlePesoChange}
-                  value={dadosCadastro.peso || ""} // ✅ Mostra exatamente o que foi salvo
-                  onFocus={() => handleInputFocus('peso')}
-                  onBlur={handleInputBlur}
-                />
-              </View>
+          {/* Altura */}
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Altura</Text>
+            <View style={[styles.textInputWrapper, focusedInput === 'altura' && styles.inputFocused]}>
+              <FontAwesome5 name="ruler-vertical" size={20} color="#999" style={styles.inputIcon} />
+              <TextInput
+                ref={inputRefs.altura}
+                style={styles.textInput}
+                placeholder="Ex: 1.75"
+                placeholderTextColor={isDarkMode ? '#888' : '#666'}
+                keyboardType="decimal-pad"
+                onChangeText={text => cad('altura', text)}
+                value={dadosCadastro.altura || ''}
+                onFocus={() => setFocusedInput('altura')}
+                onBlur={() => setFocusedInput(null)}
+              />
             </View>
-
-            {/* Campo Altura */}
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Altura</Text>
-              <View style={[
-                styles.textInputWrapper,
-                focusedInput === 'altura' && styles.inputFocused,
-                dadosCadastro.altura && styles.inputValid
-              ]}>
-                <FontAwesome5
-                  name="ruler-vertical" 
-                  size={20} 
-                  color={focusedInput === 'altura' ? '#186858ff' : '#999'} 
-                  style={styles.inputIcon}
-                />
-                <TextInput
-                  ref={inputRefs.altura}
-                  style={styles.textInput}
-                  placeholder="Ex: 1.75, 1.80, 165 cm"
-                  placeholderTextColor={isDarkMode ? '#888' : '#666'}
-                  keyboardType="decimal-pad" // ✅ Permite números decimais
-                  onChangeText={handleAlturaChange}
-                  value={dadosCadastro.altura || ""} 
-                  onFocus={() => handleInputFocus('altura')}
-                  onBlur={handleInputBlur}
-                />
-              </View>
-            </View>
-
-            {/* Campo Tipo Sanguíneo */}
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Tipo Sanguíneo</Text>
-              
-              {/* Seletor horizontal de tipos sanguíneos */}
-              <ScrollView 
-                horizontal 
-                showsHorizontalScrollIndicator={false}
-                style={{ marginBottom: 15 }}
-              >
-                <View style={{ flexDirection: 'row', gap: 10 }}>
-                  {tiposSanguineos.map((tipo) => (
-                    <TouchableOpacity
-                      key={tipo}
-                      onPress={() => cad('tipoSanguineo', tipo)}
-                      style={[
-                        styles.tipoSanguineoBtn,
-                        dadosCadastro.tipoSanguineo === tipo && styles.tipoSanguineoBtnSelected
-                      ]}
-                    >
-                      <Text style={[
-                        styles.tipoSanguineoText,
-                        dadosCadastro.tipoSanguineo === tipo && styles.tipoSanguineoTextSelected
-                      ]}>
-                        {tipo}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </ScrollView>
-
-              {/* Input para tipo sanguíneo */}
-              <View style={[
-                styles.textInputWrapper,
-                focusedInput === 'tipoSanguineo' && styles.inputFocused,
-                dadosCadastro.tipoSanguineo && styles.inputValid
-              ]}>
-                <Ionicons 
-                  name="water-outline" 
-                  size={20} 
-                  color={focusedInput === 'tipoSanguineo' ? '#186858ff' : '#999'} 
-                  style={styles.inputIcon}
-                />
-                <TextInput
-                  ref={inputRefs.tipoSanguineo}
-                  style={styles.textInput}
-                  placeholder="A+, O-, etc."
-                  placeholderTextColor={isDarkMode ? '#888' : '#666'}
-                  onChangeText={(text) => cad('tipoSanguineo', text.toUpperCase())}
-                  value={dadosCadastro.tipoSanguineo || ""}
-                  onFocus={() => handleInputFocus('tipoSanguineo')}
-                  onBlur={handleInputBlur}
-                  maxLength={3}
-                  autoCapitalize="characters"
-                />
-              </View>
-              
-              {dadosCadastro.tipoSanguineo && (
-                <Text style={styles.selecionadoText}>
-                  Tipo sanguíneo selecionado: {dadosCadastro.tipoSanguineo}
-                </Text>
-              )}
-            </View>
-
-            {/* Botão de continuar */}
-            <TouchableOpacity 
-              style={styles.botoes} 
-              onPress={continuarCadastro} 
-              disabled={loading}
-            >
-              <LinearGradient
-                colors={['#6247AA', '#856bccff']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={[styles.gradient, loading && { opacity: 0.7 }]}
-              >
-                {loading ? (
-                  <ActivityIndicator color="white" />
-                ) : (
-                  <>
-                    <Text style={styles.textBtn}>Continuar</Text>
-                    <Ionicons name="arrow-forward" size={20} color="#fff" />
-                  </>
-                )}
-              </LinearGradient>
-            </TouchableOpacity>
-
-            {/* Botão Voltar */}
-            <TouchableOpacity 
-              style={[styles.botoes, { marginTop: 10 }]} 
-              onPress={() => navigation.goBack()}
-            >
-              <LinearGradient
-                colors={isDarkMode ? ['#444', '#555'] : ['#999', '#aaa']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.gradient}
-              >
-                <Ionicons name="arrow-back" size={20} color="#fff" />
-                <Text style={styles.textBtn}>Voltar</Text>
-              </LinearGradient>
-            </TouchableOpacity>
           </View>
+
+          {/* Tipo Sanguíneo */}
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Tipo Sanguíneo</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginVertical: 10 }}>
+              {tiposSanguineos.map(tipo => (
+                <TouchableOpacity
+                  key={tipo}
+                  onPress={() => cad('tipoSanguineo', tipo)}
+                  style={[
+                    styles.tipoSanguineoBtn,
+                    dadosCadastro.tipoSanguineo === tipo && styles.tipoSanguineoBtnSelected
+                  ]}
+                >
+                  <Text style={[
+                    styles.tipoSanguineoText,
+                    dadosCadastro.tipoSanguineo === tipo && styles.tipoSanguineoTextSelected
+                  ]}>{tipo}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+
+          {/* Botão Finalizar */}
+          <TouchableOpacity onPress={finalizarCadastro} disabled={loading}>
+            <LinearGradient colors={['#6247AA', '#856BCC']} style={[styles.botoes, loading && { opacity: 0.7 }]}>
+              {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.textBtn}>Finalizar Cadastro</Text>}
+            </LinearGradient>
+          </TouchableOpacity>
+
         </View>
       </ScrollView>
     </LinearGradient>
