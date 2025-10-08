@@ -1,11 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { View, ScrollView, Text, Pressable, Image, Dimensions, TouchableOpacity } from 'react-native';
-import { Linking, Alert } from 'react-native';
+import { 
+    View, 
+    ScrollView, 
+    Text, 
+    Pressable, 
+    Image, 
+    Dimensions, 
+    TouchableOpacity,
+    Modal,
+    TextInput,
+    Alert,
+    ActivityIndicator,
+    Linking
+} from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import axios from 'axios';
 import { useTheme } from '../../../themeContext';
 import getStyles from './style';
 import { Ionicons, MaterialCommunityIcons, FontAwesome6, FontAwesome5, MaterialIcons } from '@expo/vector-icons';
+import { useApi } from '../../../crud';
 
 const { width } = Dimensions.get('window');
 
@@ -15,6 +28,22 @@ export default function Home({ navigation }) {
     const [menuAberto, setMenuAberto] = useState(false);
     const [dicaDoDia, setDicaDoDia] = useState('Carregando dica do dia...');
     const [carregando, setCarregando] = useState(true);
+    const [modalPerfilVisivel, setModalPerfilVisivel] = useState(false);
+    const [carregandoPerfil, setCarregandoPerfil] = useState(false);
+    const [salvando, setSalvando] = useState(false);
+
+    const { logoutPaciente, getPaciente, updatePaciente } = useApi();
+
+    // Estado para os dados do perfil
+    const [dadosPerfil, setDadosPerfil] = useState({
+        nome: '',
+        email: '',
+        telefone: '',
+        dataNascimento: '',
+        endereco: '',
+        cidade: '',
+        estado: ''
+    });
 
     const carregarTodasFrases = async () => {
         try {
@@ -77,6 +106,83 @@ export default function Home({ navigation }) {
         } finally {
             setCarregando(false);
         }
+    };
+
+    // Carregar dados do perfil
+    const carregarPerfil = async () => {
+        try {
+            setCarregandoPerfil(true);
+            const paciente = await getPaciente();
+            
+            if (paciente) {
+                console.log('Dados do paciente carregados:', paciente);
+                setDadosPerfil({
+                    nome: paciente.nomePaciente || '',
+                    email: paciente.emailPaciente || '',
+                    telefone: paciente.telefonePaciente || '',
+                    dataNascimento: paciente.dataNascimento || '',
+                    endereco: paciente.logradouro || '',
+                    cidade: paciente.cidade || '',
+                    estado: paciente.estado || ''
+                });
+            }
+        } catch (error) {
+            console.log('Erro ao carregar perfil:', error);
+            Alert.alert('Erro', 'Não foi possível carregar os dados do perfil.');
+        } finally {
+            setCarregandoPerfil(false);
+        }
+    };
+
+    // Salvar dados do perfil
+    const salvarPerfil = async () => {
+        try {
+            setSalvando(true);
+            
+            // Validação básica
+            if (!dadosPerfil.nome.trim()) {
+                Alert.alert('Atenção', 'Por favor, informe seu nome.');
+                return;
+            }
+
+            if (!dadosPerfil.email.trim()) {
+                Alert.alert('Atenção', 'Por favor, informe seu email.');
+                return;
+            }
+
+            const resultado = await updatePaciente(dadosPerfil);
+            
+            if (resultado) {
+                setModalPerfilVisivel(false);
+            }
+            
+        } catch (error) {
+            console.log('Erro ao salvar perfil:', error);
+            // O alerta de erro já é mostrado na função updatePaciente
+        } finally {
+            setSalvando(false);
+        }
+    };
+
+    // Abrir modal de perfil
+    const abrirModalPerfil = () => {
+        setModalPerfilVisivel(true);
+        carregarPerfil();
+    };
+
+    // Fechar modal
+    const fecharModalPerfil = () => {
+        setModalPerfilVisivel(false);
+        // Resetar dados quando fechar
+        setDadosPerfil({
+            nome: '',
+            email: '',
+            telefone: '',
+            dataNascimento: '',
+            endereco: '',
+            cidade: '',
+            estado: ''
+        });
     };
 
     useEffect(() => {
@@ -159,7 +265,7 @@ export default function Home({ navigation }) {
             nome: 'Meu Perfil',
             color: ['#C026D3', '#D946EF'],
             icone: <Ionicons name='person' size={45} color="#FFFFFF" />,
-            tela: 'Perfil'
+            acao: 'abrirPerfil'
         },
     ];
 
@@ -193,13 +299,11 @@ export default function Home({ navigation }) {
     const handleBotaoPress = (botao) => {
         if (botao.acao === 'emergencia') {
             discarEmergencia();
+        } else if (botao.acao === 'abrirPerfil') {
+            abrirModalPerfil();
         } else {
             navegarParaTela(botao.tela);
         }
-    };
-
-    const recarregarDica = () => {
-        carregarDicaComTentativas();
     };
 
     return (
@@ -230,7 +334,7 @@ export default function Home({ navigation }) {
                 <View style={styles.menuDropdown}>
                     <TouchableOpacity
                         style={styles.menuItem}
-                        onPress={() => navegarParaTela('Perfil')}
+                        onPress={() => abrirModalPerfil()}
                     >
                         <Ionicons name="person" size={20} color="#FFFFFF" />
                         <Text style={styles.menuItemText}>Meu Perfil</Text>
@@ -254,7 +358,7 @@ export default function Home({ navigation }) {
 
                     <TouchableOpacity
                         style={styles.menuItem}
-                        onPress={() => navigation.navigate('Login')}
+                        onPress={() => logoutPaciente()}
                     >
                         <Ionicons name="log-out" size={20} color="#FFFFFF" />
                         <Text style={styles.menuItemText}>Sair</Text>
@@ -305,6 +409,141 @@ export default function Home({ navigation }) {
                     </View>
                 </View>
             </ScrollView>
+
+            {/* Modal de Perfil */}
+            <Modal
+                visible={modalPerfilVisivel}
+                animationType="slide"
+                transparent={true}
+                onRequestClose={fecharModalPerfil}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContainer}>
+                        {/* Header do Modal */}
+                        <View style={styles.modalHeader}>
+                            <Text style={styles.modalTitulo}>Meu Perfil</Text>
+                            <TouchableOpacity 
+                                style={styles.modalFechar}
+                                onPress={fecharModalPerfil}
+                            >
+                                <Ionicons name="close" size={24} color="#666" />
+                            </TouchableOpacity>
+                        </View>
+
+                        {/* Conteúdo do Modal */}
+                        <ScrollView style={styles.modalContent}>
+                            {carregandoPerfil ? (
+                                <View style={styles.carregandoContainer}>
+                                    <ActivityIndicator size="large" color="#6247AA" />
+                                    <Text style={styles.carregandoTexto}>Carregando perfil...</Text>
+                                </View>
+                            ) : (
+                                <>
+                                    {/* Campo Nome */}
+                                    <View style={styles.campoContainer}>
+                                        <Text style={styles.campoLabel}>Nome Completo</Text>
+                                        <TextInput
+                                            style={styles.campoInput}
+                                            value={dadosPerfil.nome}
+                                            onChangeText={(text) => setDadosPerfil({...dadosPerfil, nome: text})}
+                                            placeholder="Digite seu nome"
+                                            placeholderTextColor="#999"
+                                        />
+                                    </View>
+
+                                    {/* Campo Email */}
+                                    <View style={styles.campoContainer}>
+                                        <Text style={styles.campoLabel}>Email</Text>
+                                        <TextInput
+                                            style={styles.campoInput}
+                                            value={dadosPerfil.email}
+                                            onChangeText={(text) => setDadosPerfil({...dadosPerfil, email: text})}
+                                            placeholder="Digite seu email"
+                                            placeholderTextColor="#999"
+                                            keyboardType="email-address"
+                                            autoCapitalize="none"
+                                        />
+                                    </View>
+
+                                    {/* Campo Telefone */}
+                                    <View style={styles.campoContainer}>
+                                        <Text style={styles.campoLabel}>Telefone</Text>
+                                        <TextInput
+                                            style={styles.campoInput}
+                                            value={dadosPerfil.telefone}
+                                            onChangeText={(text) => setDadosPerfil({...dadosPerfil, telefone: text})}
+                                            placeholder="(00) 00000-0000"
+                                            placeholderTextColor="#999"
+                                            keyboardType="phone-pad"
+                                        />
+                                    </View>
+
+                                    {/* Campo Endereço */}
+                                    <View style={styles.campoContainer}>
+                                        <Text style={styles.campoLabel}>Endereço</Text>
+                                        <TextInput
+                                            style={styles.campoInput}
+                                            value={dadosPerfil.endereco}
+                                            onChangeText={(text) => setDadosPerfil({...dadosPerfil, endereco: text})}
+                                            placeholder="Rua, número, bairro"
+                                            placeholderTextColor="#999"
+                                        />
+                                    </View>
+
+                                    {/* Campo Cidade */}
+                                    <View style={styles.campoContainer}>
+                                        <Text style={styles.campoLabel}>Cidade</Text>
+                                        <TextInput
+                                            style={styles.campoInput}
+                                            value={dadosPerfil.cidade}
+                                            onChangeText={(text) => setDadosPerfil({...dadosPerfil, cidade: text})}
+                                            placeholder="Sua cidade"
+                                            placeholderTextColor="#999"
+                                        />
+                                    </View>
+
+                                    {/* Campo Estado */}
+                                    <View style={styles.campoContainer}>
+                                        <Text style={styles.campoLabel}>Estado</Text>
+                                        <TextInput
+                                            style={styles.campoInput}
+                                            value={dadosPerfil.estado}
+                                            onChangeText={(text) => setDadosPerfil({...dadosPerfil, estado: text})}
+                                            placeholder="UF"
+                                            placeholderTextColor="#999"
+                                            maxLength={2}
+                                            autoCapitalize="characters"
+                                        />
+                                    </View>
+                                </>
+                            )}
+                        </ScrollView>
+
+                        {/* Footer do Modal */}
+                        <View style={styles.modalFooter}>
+                            <TouchableOpacity 
+                                style={styles.botaoCancelar}
+                                onPress={fecharModalPerfil}
+                                disabled={salvando}
+                            >
+                                <Text style={styles.botaoCancelarTexto}>Cancelar</Text>
+                            </TouchableOpacity>
+                            
+                            <TouchableOpacity 
+                                style={[styles.botaoSalvar, salvando && styles.botaoDesabilitado]}
+                                onPress={salvarPerfil}
+                                disabled={salvando}
+                            >
+                                {salvando ? (
+                                    <ActivityIndicator size="small" color="#FFFFFF" />
+                                ) : (
+                                    <Text style={styles.botaoSalvarTexto}>Salvar Alterações</Text>
+                                )}
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
         </LinearGradient>
     );
 }
