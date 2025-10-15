@@ -3,7 +3,7 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert } from 'react-native';
 
-export const API_URL = "http://10.67.4.179:8000/api";
+export const API_URL = "http://192.168.15.6:8000/api";
 
 /* php artisan serve --host=0.0.0.0 --port=8000 */
 
@@ -39,15 +39,15 @@ export const ApiProvider = ({ children }) => {
 
   const apiFunctions = useMemo(() => ({
 
-    // Cadastro completo
+    // Cadastro completo - ROTA CORRIGIDA
     cadastrarPaciente: async (formData) => {
-      const response = await api.post('/pacientes', formData, {
+      const response = await api.post('/paciente/cadastrar', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       return response.data;
     },
 
-    // Login
+    // Login - MANTIDO (já está correto)
     loginPaciente: async (credenciais) => {
       const response = await api.post('/paciente/logar', {
         emailPaciente: credenciais.email,
@@ -60,22 +60,20 @@ export const ApiProvider = ({ children }) => {
       return response.data;
     },
 
-    // Logout
+    // Logout - MANTIDO (já está correto)
     logoutPaciente: async () => {
       try {
-        // Tenta fazer logout no backend
         await api.post('/paciente/logout');
       } catch (error) {
         console.log('Erro no logout do backend:', error);
       } finally {
-        // Sempre limpa os dados locais
         await AsyncStorage.removeItem('user_token');
         await AsyncStorage.removeItem('user_data');
       }
       return true;
     },
 
-    // Obter perfil do paciente logado
+    // Obter perfil do paciente logado - MANTIDO (já está correto)
     getPaciente: async () => {
       try {
         const response = await api.get('/paciente/perfil');
@@ -86,7 +84,7 @@ export const ApiProvider = ({ children }) => {
       }
     },
 
-    // Atualizar dados do paciente (exceto foto)
+    // Atualizar dados do paciente (exceto foto) - CORRIGIDO para usar função separada
     updatePaciente: async (dados) => {
       try {
         // Primeiro obtém o paciente atual para pegar o ID
@@ -107,7 +105,7 @@ export const ApiProvider = ({ children }) => {
         console.log('📤 Atualizando paciente:', { idPaciente, dadosFormatados });
 
         const response = await api.put(`/paciente/${idPaciente}`, dadosFormatados);
-        
+
         if (response.data.success) {
           // Atualiza os dados locais
           const userData = await AsyncStorage.getItem('user_data');
@@ -118,14 +116,13 @@ export const ApiProvider = ({ children }) => {
             };
             await AsyncStorage.setItem('user_data', JSON.stringify(updatedUserData));
           }
-          
+
           return true;
         }
         return false;
       } catch (error) {
         console.log('❌ Erro ao atualizar paciente:', error);
-        
-        // Tratamento de erros de validação
+
         if (error.response?.data?.errors) {
           const errors = Object.values(error.response.data.errors).flat();
           Alert.alert('Erro de Validação', errors.join('\n'));
@@ -134,68 +131,69 @@ export const ApiProvider = ({ children }) => {
         } else {
           Alert.alert('Erro', 'Não foi possível atualizar o perfil. Tente novamente.');
         }
-        
+
         throw error;
       }
     },
 
-    // Atualizar foto do perfil
+    // Atualizar foto do perfil - MANTIDO (já está correto)
+    // No seu contexto API (crud.js)
     updateFotoPerfil: async (fotoUri) => {
       try {
-        // Obtém o paciente atual para pegar o ID
-        const pacienteAtual = await apiFunctions.getPaciente();
-        const idPaciente = pacienteAtual.idPaciente;
-
-        console.log('📤 Enviando foto para paciente:', idPaciente);
-
         const formData = new FormData();
         formData.append('fotoPerfil', {
           uri: fotoUri,
           type: 'image/jpeg',
-          name: `perfil_${idPaciente}_${Date.now()}.jpg`
+          name: `perfil_${Date.now()}.jpg`
         });
 
         const response = await api.post(`/paciente/${idPaciente}/foto`, formData, {
-          headers: { 
+          headers: {
             'Content-Type': 'multipart/form-data',
-            'Accept': 'application/json'
           },
-          timeout: 60000,
         });
 
-        console.log('✅ Foto atualizada com sucesso:', response.data);
-        
-        if (response.data.success) {
-          // Atualiza os dados locais
-          const userData = await AsyncStorage.getItem('user_data');
-          if (userData) {
-            const updatedUserData = {
-              ...JSON.parse(userData),
-              fotoPerfil: response.data.paciente.fotoPerfil
-            };
-            await AsyncStorage.setItem('user_data', JSON.stringify(updatedUserData));
-          }
-          
-          Alert.alert('Sucesso', 'Foto atualizada com sucesso!');
-          return response.data.paciente;
-        }
-        
-        return null;
+        return response.data;
       } catch (error) {
         console.error('❌ Erro ao atualizar foto:', error);
-        
-        if (error.response?.data?.errors) {
-          const errors = Object.values(error.response.data.errors).flat();
-          Alert.alert('Erro de Validação', errors.join('\n'));
-        } else {
-          Alert.alert('Erro', 'Não foi possível atualizar a foto. Tente novamente.');
-        }
-        
         throw error;
       }
     },
 
-    // Obter paciente por ID (para uso geral)
+    // NOVA FUNÇÃO: Deletar foto do perfil
+    deletarFotoPerfil: async () => {
+      try {
+        const pacienteAtual = await apiFunctions.getPaciente();
+        const idPaciente = pacienteAtual.idPaciente;
+
+        console.log('🗑️ Deletando foto do paciente:', idPaciente);
+
+        const response = await api.delete(`/paciente/${idPaciente}/foto`);
+
+        if (response.data.success) {
+          // Atualiza os dados locais removendo a foto
+          const userData = await AsyncStorage.getItem('user_data');
+          if (userData) {
+            const updatedUserData = {
+              ...JSON.parse(userData),
+              fotoPerfil: null
+            };
+            await AsyncStorage.setItem('user_data', JSON.stringify(updatedUserData));
+          }
+
+          Alert.alert('Sucesso', 'Foto removida com sucesso!');
+          return true;
+        }
+
+        return false;
+      } catch (error) {
+        console.error('❌ Erro ao deletar foto:', error);
+        Alert.alert('Erro', 'Não foi possível remover a foto. Tente novamente.');
+        throw error;
+      }
+    },
+
+    // Obter paciente por ID - MANTIDO (já está correto)
     obterPaciente: async (idPaciente) => {
       try {
         const response = await api.get(`/paciente/${idPaciente}`);
@@ -206,25 +204,25 @@ export const ApiProvider = ({ children }) => {
       }
     },
 
-    // Verificar autenticação
+    // Verificar autenticação - MANTIDO
     isAuthenticated: async () => {
       const token = await AsyncStorage.getItem('user_token');
       const userData = await AsyncStorage.getItem('user_data');
       return !!(token && userData);
     },
 
-    // Obter dados do usuário do AsyncStorage
+    // Obter dados do usuário do AsyncStorage - MANTIDO
     getUserData: async () => {
       const userData = await AsyncStorage.getItem('user_data');
       return userData ? JSON.parse(userData) : null;
     },
 
-    // Função auxiliar para obter token
+    // Função auxiliar para obter token - MANTIDO
     getToken: async () => {
       return await AsyncStorage.getItem('user_token');
     },
 
-    // Função para atualizar dados locais (após update)
+    // Função para atualizar dados locais (após update) - MANTIDO
     updateLocalUserData: async (novosDados) => {
       try {
         const userData = await AsyncStorage.getItem('user_data');

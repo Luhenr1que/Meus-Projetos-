@@ -26,7 +26,7 @@ export default function App() {
           <AudioProvider>
             <NavigationContainer>
               <Stack.Navigator 
-                initialRouteName="Home"
+                initialRouteName="Login"
                 screenOptions={{ headerShown: false }}
               >
                 <Stack.Screen name="Login" component={Login} />

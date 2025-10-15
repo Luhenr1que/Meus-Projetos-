@@ -79,14 +79,7 @@ export default function getStyles(isDarkMode) {
       backgroundColor: isDarkMode ? '#333' : '#F8F8F8',
     },
 
-    inputFocused: {
-      borderColor: '#6247AA',
-      shadowColor: '#6247AA',
-      shadowOffset: { width: 0, height: 0 },
-      shadowOpacity: 0.2,
-      shadowRadius: 8,
-      elevation: 4,
-    },
+
 
     inputValid: {
       borderColor: '#4CAF50',
