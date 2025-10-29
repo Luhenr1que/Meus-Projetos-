@@ -15,6 +15,7 @@ import Cadastro3 from './src/inicio/views/cadastro/etapa3';
 import Cadastro4 from './src/inicio/views/cadastro/etapa4';
 import Meditacao from './src/principal/meditação/meditacao';
 import Alimentacao from './src/principal/alimentacao/alimentacao';
+import MapaMercados from './src/principal/mapa/mapa';
 
 const Stack = createNativeStackNavigator();
 
@@ -26,7 +27,7 @@ export default function App() {
           <AudioProvider>
             <NavigationContainer>
               <Stack.Navigator 
-                initialRouteName="Login"
+                initialRouteName="MapaMercados"
                 screenOptions={{ headerShown: false }}
               >
                 <Stack.Screen name="Login" component={Login} />
@@ -37,6 +38,7 @@ export default function App() {
                 <Stack.Screen name="Home" component={Home} />
                 <Stack.Screen name="Meditacao" component={Meditacao} />
                 <Stack.Screen name="Alimentacao" component={Alimentacao} />
+                <Stack.Screen name="MapaMercados" component={MapaMercados} />
               </Stack.Navigator>
             </NavigationContainer>
           </AudioProvider>
