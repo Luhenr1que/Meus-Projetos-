@@ -12,15 +12,39 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Permitir que o medLive use sua localização para mostrar mercados próximos.",
+          "locationWhenInUsePermission": "Permitir que o medLive use sua localização para mostrar mercados próximos."
+        }
+      ]
+    ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Este app usa a localização para mostrar mercados próximos à sua área.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Este app usa a localização para mostrar mercados próximos à sua área."
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ],
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyDZT6L5dg7t0mT8ojkwi8V7mASZYGCcSIY"
+        }
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png"
