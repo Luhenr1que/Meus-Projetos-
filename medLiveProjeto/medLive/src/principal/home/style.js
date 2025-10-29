@@ -351,5 +351,129 @@ export default function getStyles(isDarkMode) {
         recarregando: {
             transform: [{ rotate: '360deg' }],
         },
+        // Adicione estas styles ao seu arquivo style.js
+
+        modalOverlay: {
+            flex: 1,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: 20,
+        },
+
+        modalContainer: {
+            backgroundColor: isDarkMode ? '#1E293B' : '#FFFFFF',
+            borderRadius: 16,
+            width: '100%',
+            maxHeight: '80%',
+            shadowColor: '#000',
+            shadowOffset: {
+                width: 0,
+                height: 2,
+            },
+            shadowOpacity: 0.25,
+            shadowRadius: 4,
+            elevation: 5,
+        },
+
+        modalHeader: {
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: 20,
+            borderBottomWidth: 1,
+            borderBottomColor: isDarkMode ? '#334155' : '#E5E7EB',
+        },
+
+        modalTitulo: {
+            fontSize: 20,
+            fontWeight: 'bold',
+            color: isDarkMode ? '#FFFFFF' : '#1F2937',
+        },
+
+        modalFechar: {
+            padding: 4,
+        },
+
+        modalContent: {
+            padding: 20,
+            maxHeight: 400,
+        },
+
+        campoContainer: {
+            marginBottom: 16,
+        },
+
+        campoLabel: {
+            fontSize: 14,
+            fontWeight: '600',
+            color: isDarkMode ? '#D1D5DB' : '#374151',
+            marginBottom: 6,
+        },
+
+        campoInput: {
+            backgroundColor: isDarkMode ? '#374151' : '#F9FAFB',
+            borderWidth: 1,
+            borderColor: isDarkMode ? '#4B5563' : '#D1D5DB',
+            borderRadius: 8,
+            padding: 12,
+            fontSize: 16,
+            color: isDarkMode ? '#FFFFFF' : '#1F2937',
+        },
+
+        modalFooter: {
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            padding: 20,
+            borderTopWidth: 1,
+            borderTopColor: isDarkMode ? '#334155' : '#E5E7EB',
+            gap: 12,
+        },
+
+        botaoCancelar: {
+            flex: 1,
+            padding: 16,
+            borderRadius: 8,
+            borderWidth: 1,
+            borderColor: isDarkMode ? '#4B5563' : '#D1D5DB',
+            alignItems: 'center',
+        },
+
+        botaoCancelarTexto: {
+            fontSize: 16,
+            fontWeight: '600',
+            color: isDarkMode ? '#9CA3AF' : '#6B7280',
+        },
+
+        botaoSalvar: {
+            flex: 2,
+            padding: 16,
+            borderRadius: 8,
+            backgroundColor: '#6247AA',
+            alignItems: 'center',
+        },
+
+        botaoDesabilitado: {
+            opacity: 0.6,
+        },
+
+        botaoSalvarTexto: {
+            fontSize: 16,
+            fontWeight: '600',
+            color: '#FFFFFF',
+        },
+
+        carregandoContainer: {
+            padding: 40,
+            alignItems: 'center',
+            justifyContent: 'center',
+        },
+
+        carregandoTexto: {
+            marginTop: 12,
+            fontSize: 16,
+            color: isDarkMode ? '#D1D5DB' : '#6B7280',
+            textAlign: 'center',
+        },
     });
 }

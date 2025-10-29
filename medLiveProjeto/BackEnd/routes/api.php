@@ -14,21 +14,18 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-// ✅ ROTAS PÚBLICAS
-Route::post('/cadastrar', [PacienteController::class, 'cadastrar']);
-Route::post('/login', [PacienteController::class, 'logar']);
+// Rotas do Paciente
+Route::post('/paciente/cadastrar', [PacienteController::class, 'cadastrar']);
+Route::post('/paciente/logar', [PacienteController::class, 'logar']);
 
-Route::post('/pacientes/{id}/foto', [PacienteController::class, 'atualizarFoto'])->middleware('auth:sanctum');
-
-// ✅ ADICIONAR ROTAS COMPATÍVEIS COM O REACT NATIVE
-Route::post('/pacientes', [PacienteController::class, 'cadastrar']); // Alias para cadastrar
-Route::post('/pacientes/login', [PacienteController::class, 'logar']); // Alias para login
-
+// Rotas protegidas (requerem autenticação)
 Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/logout', [PacienteController::class, 'logout']);
-    Route::get('/perfil', [PacienteController::class, 'perfil']);
+    Route::post('/paciente/logout', [PacienteController::class, 'logout']);
+    Route::get('/paciente/perfil', [PacienteController::class, 'perfil']);
     
-    // ✅ ADICIONAR ROTAS COMPATÍVEIS COM O REACT NATIVE (PROTEGIDAS)
-    Route::post('/pacientes/logout', [PacienteController::class, 'logout']); // Alias para logout
-    Route::get('/pacientes/perfil', [PacienteController::class, 'perfil']); // Alias para perfil
+    // Novas rotas para gerenciamento do perfil
+    Route::get('/paciente/{id}', [PacienteController::class, 'obterPaciente']);
+    Route::put('/paciente/{id}', [PacienteController::class, 'atualizarPaciente']);
+    Route::post('/paciente/{id}/foto', [PacienteController::class, 'atualizarFoto']);
+    Route::delete('/paciente/{id}/foto', [PacienteController::class, 'deletarFoto']);
 });

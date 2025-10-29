@@ -55,137 +55,42 @@ export default function Cadastro4({ navigation }) {
     setModalVisible(false);
   };
 
-  // Função para processar imagem para web
-  const processarImagemWeb = async (uri) => {
-    try {
-      // Converte base64 para blob se necessário
-      if (uri.startsWith('data:')) {
-        const response = await fetch(uri);
-        return await response.blob();
-      } else {
-        // Se for uma URL normal
-        const response = await fetch(uri);
-        return await response.blob();
-      }
-    } catch (error) {
-      console.error('Erro ao processar imagem web:', error);
-      throw error;
-    }
-  };
-
-const finalizarCadastro = async () => {
-  if (!dadosCadastro.idPaciente) {
-    Alert.alert('Atenção', 'Paciente inválido.');
-    return;
-  }
-
-  try {
-    setLoading(true);
-
-    // Se não tem imagem, finaliza sem foto
-    if (!imagem?.uri) {
-      Alert.alert('Sucesso', 'Cadastro finalizado sem foto!');
-      navigation.navigate('Login');
+  const finalizarCadastro = async () => {
+    if (!dadosCadastro.idPaciente) {
+      Alert.alert('Atenção', 'Paciente inválido.');
       return;
     }
 
-    const formData = new FormData();
-    const filename = `perfil_${dadosCadastro.idPaciente}_${Date.now()}.jpg`;
-
-    if (Platform.OS === 'web') {
-      // Para web - processa a imagem
-      const response = await fetch(imagem.uri);
-      const blob = await response.blob();
-      formData.append('fotoPerfil', blob, filename);
-    } else {
-      // Para mobile
-      formData.append('fotoPerfil', {
-        uri: imagem.uri,
-        name: filename,
-        type: 'image/jpeg',
-      });
-    }
-
-    // Adiciona o ID do paciente
-    formData.append('idPaciente', dadosCadastro.idPaciente.toString());
-
-    console.log('📤 Enviando foto...', {
-      idPaciente: dadosCadastro.idPaciente,
-      filename: filename
-    });
-
-    // Tenta o método principal primeiro
     try {
-      const response = await atualizarFotoPerfil(dadosCadastro.idPaciente, formData);
-      console.log('✅ Foto salva no banco:', response);
-      Alert.alert('Sucesso', 'Cadastro finalizado com foto!');
-      navigation.navigate('Login');
-    } catch (error) {
-      console.log('🔄 Método principal falhou, tentando alternativo...');
-      // Se o método principal falhar, tenta o alternativo
-      const response = await atualizarFotoPerfilAlternativo(dadosCadastro.idPaciente, imagem);
-      console.log('✅ Foto salva (método alternativo):', response);
-      Alert.alert('Sucesso', 'Cadastro finalizado com foto!');
-      navigation.navigate('Login');
-    }
+      setLoading(true);
 
-  } catch (error) {
-    console.error('❌ Erro ao salvar foto:', error);
-    Alert.alert(
-      'Aviso', 
-      'Foto não pôde ser salva, mas o cadastro foi finalizado. Você pode adicionar a foto depois.',
-      [{ text: 'OK', onPress: () => navigation.navigate('Login') }]
-    );
-  } finally {
-    setLoading(false);
-  }
-};
-
-  // Método alternativo para upload
-  const tentarUploadAlternativo = async () => {
-    try {
-      console.log('🔄 Tentando método alternativo de upload...');
-      
-      if (Platform.OS === 'web') {
-        // Para web, tenta converter para base64 e enviar como string
-        const response = await fetch(imagem.uri);
-        const blob = await response.blob();
-        const base64 = await new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result);
-          reader.readAsDataURL(blob);
-        });
-
-        // Envia como JSON em vez de FormData
-        const responseAlt = await fetch('/api/pacientes/foto-perfil', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            idPaciente: dadosCadastro.idPaciente,
-            fotoBase64: base64
-          }),
-        });
-
-        if (responseAlt.ok) {
-          console.log('✅ Foto salva via método alternativo');
-          Alert.alert('Sucesso', 'Cadastro finalizado com foto!');
-          navigation.navigate('Login');
-          return;
-        }
+      // Se não tem imagem, finaliza sem foto
+      if (!imagem?.uri) {
+        Alert.alert('Sucesso', 'Cadastro finalizado sem foto!');
+        navigation.navigate('Login');
+        return;
       }
 
-      // Se chegou aqui, ambos os métodos falharam
-      throw new Error('Todos os métodos de upload falharam');
+      console.log('📤 Enviando foto...', {
+        idPaciente: dadosCadastro.idPaciente,
+        filename: `perfil_${dadosCadastro.idPaciente}_${Date.now()}.jpg`
+      });
+
+      // Usa apenas o método atualizarFotoPerfil do contexto
+      await atualizarFotoPerfil(imagem.uri);
       
-    } catch (altError) {
-      console.error('❌ Método alternativo também falhou:', altError);
+      Alert.alert('Sucesso', 'Cadastro finalizado com foto!');
+      navigation.navigate('Login');
+
+    } catch (error) {
+      console.error('❌ Erro ao salvar foto:', error);
       Alert.alert(
         'Aviso', 
-        'Foto não pôde ser salva, mas o cadastro foi finalizado. Você pode adicionar a foto depois no perfil.',
+        'Foto não pôde ser salva, mas o cadastro foi finalizado. Você pode adicionar a foto depois.',
         [{ text: 'OK', onPress: () => navigation.navigate('Login') }]
       );
+    } finally {
+      setLoading(false);
     }
   };
 

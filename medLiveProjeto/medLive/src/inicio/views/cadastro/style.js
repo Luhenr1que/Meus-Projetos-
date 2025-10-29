@@ -180,14 +180,7 @@ export default function getStyles(isDarkMode) {
     },
 
     // ===== ESTADOS DOS INPUTS =====
-    inputFocused: {
-      borderColor: primaryColor,
-      shadowColor: primaryColor,
-      shadowOffset: { width: 0, height: 0 },
-      shadowOpacity: 0.2,
-      shadowRadius: 8,
-      elevation: 4,
-    },
+
     inputValid: {
       borderColor: '#4CAF50',
     },

@@ -89,7 +89,6 @@ export default function Meditacao({ navigation }) {
     };
 
     const openMusicModal = (index) => {
-        playSomBot();
         setCurrentMessage(musicPlay[index].msg);
         setModalVisible(true);
 
@@ -104,7 +103,6 @@ export default function Meditacao({ navigation }) {
     };
 
     const handleBackPress = () => {
-        playSomBot();
         stopMusic();
         setTimeout(() => {
             navigation.navigate('Home');
