@@ -186,171 +186,193 @@ export default function getStyles(isDarkMode) {
     },
 
     tipoSanguineoBtn: {
-        paddingHorizontal: 15,
-        paddingVertical: 8,
-        borderRadius: 20,
-        backgroundColor: '#444',
-        borderWidth: 2,
-        borderColor: '#666'
-        },
-        tipoSanguineoBtnSelected: {
-        backgroundColor: '#6247AA',
-        borderColor: '#6247AA'
-        },
-        tipoSanguineoText: {
-        color: '#fff',
-        fontWeight: '600',
-        fontSize: 16
-        },
-        tipoSanguineoTextSelected: {
-        color: '#fff'
-        },
-        selecionadoText: {
-        color: '#6247AA',
-        fontSize: 14,
-        marginTop: 5,
-        fontWeight: '500',
-        textAlign: 'center'
-        },
-        fotoContainer: {
-        alignItems: 'center',
-        marginBottom: 30,
-        width: '100%',
-        },
+      paddingHorizontal: 15,
+      paddingVertical: 8,
+      borderRadius: 20,
+      backgroundColor: '#444',
+      borderWidth: 2,
+      borderColor: '#666'
+    },
+    tipoSanguineoBtnSelected: {
+      backgroundColor: '#6247AA',
+      borderColor: '#6247AA'
+    },
+    tipoSanguineoText: {
+      color: '#fff',
+      fontWeight: '600',
+      fontSize: 16
+    },
+    tipoSanguineoTextSelected: {
+      color: '#fff'
+    },
+    selecionadoText: {
+      color: '#6247AA',
+      fontSize: 14,
+      marginTop: 5,
+      fontWeight: '500',
+      textAlign: 'center'
+    },
+    fotoContainer: {
+      alignItems: 'center',
+      marginBottom: 30,
+      width: '100%',
+    },
 
-        fotoButton: {
-        position: 'relative',
-        marginBottom: 15,
-        },
+    fotoButton: {
+      position: 'relative',
+      marginBottom: 15,
+    },
 
-        fotoSelecionada: {
-        width: 150,
-        height: 150,
-        borderRadius: 75,
-        borderWidth: 3,
-        borderColor: '#6247AA',
-        },
+    fotoSelecionada: {
+      width: 150,
+      height: 150,
+      borderRadius: 75,
+      borderWidth: 3,
+      borderColor: '#6247AA',
+    },
 
-        fotoPlaceholder: {
-        width: 150,
-        height: 150,
-        borderRadius: 75,
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderWidth: 3,
-        borderColor: isDarkMode ? '#fff' : '#fff',
-        borderStyle: 'dashed',
-        },
+    fotoPlaceholder: {
+      width: 150,
+      height: 150,
+      borderRadius: 75,
+      justifyContent: 'center',
+      alignItems: 'center',
+      borderWidth: 3,
+      borderColor: isDarkMode ? '#fff' : '#fff',
+      borderStyle: 'dashed',
+    },
 
-        editIconContainer: {
-        position: 'absolute',
-        bottom: 5,
-        right: 5,
-        backgroundColor: '#6247AA',
-        borderRadius: 15,
-        width: 30,
-        height: 30,
-        justifyContent: 'center',
-        alignItems: 'center',
-        },
+    editIconContainer: {
+      position: 'absolute',
+      bottom: 5,
+      right: 5,
+      backgroundColor: '#6247AA',
+      borderRadius: 15,
+      width: 30,
+      height: 30,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
 
-        fotoPlaceholderSubtext: {
-        color: '#fff',
-        fontSize: 12,
-        marginTop: 8,
-        textAlign: 'center',
-        fontWeight: '500',
-        },
+    fotoPlaceholderSubtext: {
+      color: '#fff',
+      fontSize: 12,
+      marginTop: 8,
+      textAlign: 'center',
+      fontWeight: '500',
+    },
 
-        instrucoesText: {
-        color: isDarkMode ? '#ccc' : '#fff',
-        fontSize: 14,
-        textAlign: 'center',
-        fontWeight: '500',
-        },
+    instrucoesText: {
+      color: isDarkMode ? '#ccc' : '#fff',
+      fontSize: 14,
+      textAlign: 'center',
+      fontWeight: '500',
+    },
 
-        modalContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        },
+    modalContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
 
-        modalContent: {
-        backgroundColor: isDarkMode ? '#333' : '#fff',
-        borderRadius: 15,
-        padding: 20,
-        width: '80%',
-        alignItems: 'center',
-        },
+    modalContent: {
+      backgroundColor: isDarkMode ? '#333' : '#fff',
+      borderRadius: 15,
+      padding: 20,
+      width: '80%',
+      alignItems: 'center',
+    },
 
-        modalTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginBottom: 20,
-        color: isDarkMode ? '#fff' : '#000',
-        },
+    modalTitle: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      marginBottom: 20,
+      color: isDarkMode ? '#fff' : '#000',
+    },
 
-        modalOption: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: 15,
-        width: '100%',
-        borderBottomWidth: 1,
-        borderBottomColor: isDarkMode ? '#555' : '#eee',
-        },
+    modalOption: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 15,
+      width: '100%',
+      borderBottomWidth: 1,
+      borderBottomColor: isDarkMode ? '#555' : '#eee',
+    },
 
-        modalOptionText: {
-        fontSize: 16,
-        marginLeft: 10,
-        color: isDarkMode ? '#fff' : '#000',
-        },
+    modalOptionText: {
+      fontSize: 16,
+      marginLeft: 10,
+      color: isDarkMode ? '#fff' : '#000',
+    },
 
-        modalCancel: {
-        padding: 15,
-        width: '100%',
-        alignItems: 'center',
-        marginTop: 10,
-        },
+    modalCancel: {
+      padding: 15,
+      width: '100%',
+      alignItems: 'center',
+      marginTop: 10,
+    },
 
-        modalCancelText: {
-        fontSize: 16,
-        color: '#6247AA',
-        fontWeight: '600',
-        },
-        // Adicione estas styles ao seu arquivo de estilos
-dadosResumo: {
-  backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
-  padding: 15,
-  borderRadius: 10,
-  marginBottom: 20,
-  borderLeftWidth: 4,
-  borderLeftColor: '#6247AA',
-},
-dadosTitulo: {
-  color: isDarkMode ? '#fff' : '#333',
-  fontSize: 16,
-  fontWeight: 'bold',
-  marginBottom: 10,
-},
-dadosItem: {
-  color: isDarkMode ? '#ccc' : '#666',
-  fontSize: 14,
-  marginBottom: 5,
-},
-alertContainer: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  backgroundColor: 'rgba(255,165,0,0.2)',
-  padding: 10,
-  borderRadius: 5,
-  marginTop: 10,
-},
-alertText: {
-  color: '#FFA500',
-  marginLeft: 10,
-  fontSize: 12,
-  flex: 1,
-},
+    modalCancelText: {
+      fontSize: 16,
+      color: '#6247AA',
+      fontWeight: '600',
+    },
+    // Adicione estas styles ao seu arquivo de estilos
+    dadosResumo: {
+      backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+      padding: 15,
+      borderRadius: 10,
+      marginBottom: 20,
+      borderLeftWidth: 4,
+      borderLeftColor: '#6247AA',
+    },
+    dadosTitulo: {
+      color: isDarkMode ? '#fff' : '#333',
+      fontSize: 16,
+      fontWeight: 'bold',
+      marginBottom: 10,
+    },
+    dadosItem: {
+      color: isDarkMode ? '#ccc' : '#666',
+      fontSize: 14,
+      marginBottom: 5,
+    },
+    alertContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: 'rgba(255,165,0,0.2)',
+      padding: 10,
+      borderRadius: 5,
+      marginTop: 10,
+    },
+    alertText: {
+      color: '#FFA500',
+      marginLeft: 10,
+      fontSize: 12,
+      flex: 1,
+    },
+    fotoComContainer: {
+      position: 'relative',
+      alignItems: 'center',
+    },
+
+    botaoRemoverFoto: {
+      position: 'absolute',
+      top: -10,
+      right: -10,
+      backgroundColor: 'white',
+      borderRadius: 12,
+      padding: 2,
+    },
+
+    observacao: {
+      fontSize: 14,
+      color: isDarkMode ? '#CCC' : '#666',
+      textAlign: 'center',
+      marginTop: 10,
+      marginBottom: 20,
+      fontStyle: 'italic',
+    },
   });
 }

@@ -20,12 +20,12 @@ Route::post('/paciente/logar', [PacienteController::class, 'logar']);
 
 // Rotas protegidas (requerem autenticação)
 Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/paciente/logout', [PacienteController::class, 'logout']);
-    Route::get('/paciente/perfil', [PacienteController::class, 'perfil']);
-    
-    // Novas rotas para gerenciamento do perfil
-    Route::get('/paciente/{id}', [PacienteController::class, 'obterPaciente']);
-    Route::put('/paciente/{id}', [PacienteController::class, 'atualizarPaciente']);
-    Route::post('/paciente/{id}/foto', [PacienteController::class, 'atualizarFoto']);
-    Route::delete('/paciente/{id}/foto', [PacienteController::class, 'deletarFoto']);
+// routes/api.php
+
+Route::post('/paciente/logout', [PacienteController::class, 'logout'])->middleware('auth:sanctum');
+Route::get('/paciente/perfil', [PacienteController::class, 'perfil'])->middleware('auth:sanctum');
+Route::get('/paciente/{id}', [PacienteController::class, 'obterPaciente'])->middleware('auth:sanctum');
+Route::put('/paciente/{id}', [PacienteController::class, 'atualizarPaciente'])->middleware('auth:sanctum');
+Route::post('/paciente/{id}/foto', [PacienteController::class, 'atualizarFoto'])->middleware('auth:sanctum');
+Route::delete('/paciente/{id}/foto', [PacienteController::class, 'deletarFoto'])->middleware('auth:sanctum');
 });

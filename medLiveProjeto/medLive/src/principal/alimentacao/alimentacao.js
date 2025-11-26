@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,10 @@ import {
   Image,
   Pressable,
   Dimensions,
+  Modal,
+  ScrollView,
+  Keyboard,
+  Linking,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../../../themeContext';
@@ -18,329 +22,278 @@ import axios from 'axios';
 
 const { width } = Dimensions.get('window');
 
-// Dados locais em português como fallback
-const ALIMENTOS_LOCAIS = {
-  'arroz': [
-    {
-      id: '1',
-      product_name: 'Arroz Branco Cozido',
-      brands: 'TACO',
-      category: 'Cereais e derivados',
-      nutriments: {
-        'energy-kcal_100g': 128,
-        carbohydrates_100g: 28.1,
-        proteins_100g: 2.5,
-        fat_100g: 0.2,
-        fiber_100g: 1.3
-      }
-    },
-    {
-      id: '2',
-      product_name: 'Arroz Integral Cozido',
-      brands: 'TACO',
-      category: 'Cereais e derivados',
-      nutriments: {
-        'energy-kcal_100g': 124,
-        carbohydrates_100g: 25.8,
-        proteins_100g: 2.6,
-        fat_100g: 1.0,
-        fiber_100g: 2.7
-      }
-    }
-  ],
-  'frango': [
-    {
-      id: '3',
-      product_name: 'Peito de Frango Grelhado',
-      brands: 'TACO',
-      category: 'Carnes e derivados',
-      nutriments: {
-        'energy-kcal_100g': 159,
-        carbohydrates_100g: 0,
-        proteins_100g: 31.0,
-        fat_100g: 3.2
-      }
-    }
-  ],
-  'maçã': [
-    {
-      id: '4',
-      product_name: 'Maçã Fuji',
-      brands: 'TACO',
-      category: 'Frutas',
-      nutriments: {
-        'energy-kcal_100g': 56,
-        carbohydrates_100g: 14.1,
-        proteins_100g: 0.3,
-        fat_100g: 0.4,
-        fiber_100g: 2.1
-      }
-    }
-  ],
-  'banana': [
-    {
-      id: '5',
-      product_name: 'Banana Prata',
-      brands: 'TACO',
-      category: 'Frutas',
-      nutriments: {
-        'energy-kcal_100g': 98,
-        carbohydrates_100g: 25.8,
-        proteins_100g: 1.3,
-        fat_100g: 0.1,
-        fiber_100g: 2.6
-      }
-    }
-  ]
-};
+const popularTerms = [
+  "pasta", "chicken", "salad", "soup", "cake", "bread", "rice", 
+  "pizza", "fish", "beef", "vegetarian", "dessert", "breakfast", "dinner"
+];
 
 export default function Alimentacao({ navigation }) {
   const { isDarkMode } = useTheme();
   const styles = getStyles(isDarkMode);
 
   const [searchTerm, setSearchTerm] = useState('');
-  const [alimentos, setAlimentos] = useState([]);
+  const [receitas, setReceitas] = useState([]);
   const [carregando, setCarregando] = useState(false);
   const [pesquisaRealizada, setPesquisaRealizada] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [recipeDetails, setRecipeDetails] = useState(null);
+  const [detailsLoading, setDetailsLoading] = useState(false);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
 
-  // 🔍 Buscar alimentos - Estratégia melhorada
-  const buscarAlimentos = async (termo) => {
+  // APIs disponíveis
+  const MEALDB_URL = "https://www.themealdb.com/api/json/v1/1/search.php";
+  const MEALDB_RANDOM_URL = "https://www.themealdb.com/api/json/v1/1/random.php";
+  const MEALDB_CATEGORIES_URL = "https://www.themealdb.com/api/json/v1/1/categories.php";
+
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener(
+      "keyboardDidShow",
+      () => {
+        setKeyboardVisible(true);
+      }
+    );
+    const keyboardDidHideListener = Keyboard.addListener(
+      "keyboardDidHide",
+      () => {
+        setKeyboardVisible(false);
+      }
+    );
+
+    return () => {
+      keyboardDidShowListener.remove();
+      keyboardDidHideListener.remove();
+    };
+  }, []);
+
+  useEffect(() => {
+    fetchInitialRecipes();
+  }, []);
+
+  const fetchInitialRecipes = async () => {
+    setCarregando(true);
+    try {
+      // Buscar algumas receitas aleatórias para início
+      const randomPromises = Array(3).fill().map(() => 
+        axios.get(MEALDB_RANDOM_URL)
+      );
+      
+      const responses = await Promise.all(randomPromises);
+      const allMeals = responses.flatMap(response => 
+        response.data.meals || []
+      );
+
+      if (allMeals.length > 0) {
+        const formattedRecipes = allMeals.map(formatMealToRecipe);
+        setReceitas(formattedRecipes);
+      } else {
+        // Fallback para busca por termo popular
+        const randomTerm = popularTerms[Math.floor(Math.random() * popularTerms.length)];
+        await buscarReceitas(randomTerm);
+      }
+    } catch (error) {
+      console.error("Erro ao carregar receitas iniciais:", error);
+      const randomTerm = popularTerms[Math.floor(Math.random() * popularTerms.length)];
+      await buscarReceitas(randomTerm);
+    } finally {
+      setCarregando(false);
+    }
+  };
+
+  const formatMealToRecipe = (meal) => {
+    if (!meal) return null;
+    
+    // Extrair ingredientes
+    const ingredients = [];
+    for (let i = 1; i <= 20; i++) {
+      const ingredient = meal[`strIngredient${i}`];
+      const measure = meal[`strMeasure${i}`];
+      if (ingredient && ingredient.trim()) {
+        ingredients.push(`${measure || ''} ${ingredient}`.trim());
+      }
+    }
+
+    return {
+      id: meal.idMeal,
+      title: meal.strMeal,
+      category: meal.strCategory,
+      area: meal.strArea,
+      ingredients: ingredients.join('|'),
+      instructions: meal.strInstructions,
+      image: meal.strMealThumb,
+      video: meal.strYoutube,
+      source: meal.strSource,
+      tags: meal.strTags,
+      servings: '4', // Valor padrão pois a MealDB não fornece
+      isMealDB: true
+    };
+  };
+
+  const buscarReceitas = async (termo) => {
     if (!termo.trim()) {
-      Alert.alert('Atenção', 'Digite um alimento para pesquisar');
+      Alert.alert('Atenção', 'Digite um termo para pesquisar receitas');
       return;
     }
 
     try {
       setCarregando(true);
       setPesquisaRealizada(true);
-      console.log(`Buscando: ${termo}`);
+      Keyboard.dismiss();
 
-      // Primeiro tenta dados locais
-      const termoLower = termo.toLowerCase();
-      let resultados = [];
+      const response = await axios.get(MEALDB_URL, {
+        params: {
+          s: termo
+        },
+        timeout: 10000,
+      });
 
-      // Busca nos dados locais
-      for (const [key, alimentosList] of Object.entries(ALIMENTOS_LOCAIS)) {
-        if (termoLower.includes(key) || key.includes(termoLower)) {
-          resultados = [...resultados, ...alimentosList];
-        }
-      }
-
-      // Se não encontrou nos dados locais, tenta API externa
-      if (resultados.length === 0) {
-        resultados = await buscarNaAPIExterna(termo);
-      }
-
-      setAlimentos(resultados);
-
-      if (resultados.length === 0) {
+      if (response.data.meals && response.data.meals.length > 0) {
+        const formattedRecipes = response.data.meals.map(formatMealToRecipe).filter(Boolean);
+        setReceitas(formattedRecipes);
+      } else {
+        setReceitas([]);
         Alert.alert(
-          'Info',
-          'Nenhum alimento encontrado. Tente termos mais comuns como: arroz, frango, maçã, banana, etc.'
+          'Nenhuma receita encontrada',
+          'Tente outros termos como: pasta, chicken, salad, cake, etc.'
         );
       }
 
     } catch (error) {
-      console.log('❌ Erro ao buscar alimentos:', error);
-      // Fallback para dados locais em caso de erro
-      const termoLower = searchTerm.toLowerCase();
-      const resultadosFallback = [];
+      console.error("Erro na pesquisa de receitas:", error);
       
-      for (const [key, alimentosList] of Object.entries(ALIMENTOS_LOCAIS)) {
-        if (termoLower.includes(key)) {
-          resultadosFallback.push(...alimentosList);
-        }
-      }
-      
-      setAlimentos(resultadosFallback);
-      
-      if (resultadosFallback.length === 0) {
+      if (error.code === 'ECONNABORTED') {
         Alert.alert(
-          'Info',
-          'Use termos em português como: arroz, frango, maçã, banana, pão, leite, etc.'
+          'Timeout',
+          'A requisição demorou muito. Verifique sua conexão com a internet.'
+        );
+      } else {
+        Alert.alert(
+          'Erro',
+          'Não foi possível buscar as receitas. Tente novamente.'
         );
       }
+      setReceitas([]);
     } finally {
       setCarregando(false);
     }
   };
 
-  // Buscar em API externa alternativa
-  const buscarNaAPIExterna = async (termo) => {
+  const fetchRecipeDetails = async (recipe) => {
+    setDetailsLoading(true);
+    setModalVisible(true);
+    
+    // Se já temos todos os dados da MealDB, usa diretamente
+    if (recipe.isMealDB) {
+      setRecipeDetails(recipe);
+      setDetailsLoading(false);
+      return;
+    }
+
+    // Caso precise buscar detalhes adicionais (para outras APIs)
     try {
-      // Opção 1: Nutritionix API (mais confiável)
-      const response = await axios.get(
-        `https://trackapi.nutritionix.com/v2/search/instant`,
-        {
-          params: {
-            query: termo,
-            detailed: true
-          },
-          headers: {
-            'x-app-id': 'seu-app-id', // Você precisa se registrar
-            'x-app-key': 'seu-app-key',
-          },
-          timeout: 8000
-        }
-      );
-
-      if (response.data && response.data.common) {
-        return response.data.common.map(item => ({
-          id: item.food_name,
-          product_name: this.traduzirAlimento(item.food_name),
-          brands: 'Nutritionix',
-          nutriments: {
-            'energy-kcal_100g': item.nf_calories,
-            carbohydrates_100g: item.nf_total_carbohydrate,
-            proteins_100g: item.nf_protein,
-            fat_100g: item.nf_total_fat
-          }
-        }));
-      }
-
-      return [];
+      // Aqui você pode implementar busca adicional se necessário
+      setRecipeDetails(recipe);
     } catch (error) {
-      console.log('API externa falhou, usando dados locais');
-      return [];
+      console.error("Erro ao buscar detalhes:", error);
+      setRecipeDetails(recipe);
+    } finally {
+      setDetailsLoading(false);
     }
   };
 
-  // Função simples de tradução
-  const traduzirAlimento = (nome) => {
-    const traducoes = {
-      'rice': 'Arroz',
-      'chicken': 'Frango',
-      'apple': 'Maçã',
-      'banana': 'Banana',
-      'bread': 'Pão',
-      'milk': 'Leite',
-      'egg': 'Ovo',
-      'beef': 'Carne Bovina',
-      'fish': 'Peixe',
-      'pasta': 'Massa'
-    };
+  const handleSearch = () => buscarReceitas(searchTerm);
 
-    return traducoes[nome.toLowerCase()] || nome;
+  const formatarIngredientes = (ingredients) => {
+    if (!ingredients) return [];
+    return ingredients.split('|').filter(ing => ing.trim() !== '');
   };
 
-  // Buscar alimentos genéricos baseados no termo
-  const buscarAlimentosGenericos = (termo) => {
-    const termoLower = termo.toLowerCase();
-    const alimentosGenericos = [];
-
-    if (termoLower.includes('arroz')) {
-      alimentosGenericos.push(
-        {
-          id: 'arroz-branco',
-          product_name: 'Arroz Branco Cozido',
-          brands: 'TACO Brasil',
-          category: 'Cereais',
-          nutriments: {
-            'energy-kcal_100g': 128,
-            carbohydrates_100g: 28.1,
-            proteins_100g: 2.5,
-            fat_100g: 0.2,
-            fiber_100g: 1.3
-          }
-        },
-        {
-          id: 'arroz-integral',
-          product_name: 'Arroz Integral Cozido',
-          brands: 'TACO Brasil',
-          category: 'Cereais',
-          nutriments: {
-            'energy-kcal_100g': 124,
-            carbohydrates_100g: 25.8,
-            proteins_100g: 2.6,
-            fat_100g: 1.0,
-            fiber_100g: 2.7
-          }
-        }
-      );
-    }
-
-    if (termoLower.includes('frango') || termoLower.includes('peito')) {
-      alimentosGenericos.push(
-        {
-          id: 'frango-grelhado',
-          product_name: 'Peito de Frango Grelhado',
-          brands: 'TACO Brasil',
-          category: 'Carnes',
-          nutriments: {
-            'energy-kcal_100g': 159,
-            carbohydrates_100g: 0,
-            proteins_100g: 31.0,
-            fat_100g: 3.2
-          }
-        }
-      );
-    }
-
-    // Adicione mais categorias conforme necessário...
-
-    return alimentosGenericos;
+  const formatarInstrucoes = (instructions) => {
+    if (!instructions) return [];
+    // Dividir por quebras de linha e pontos
+    return instructions
+      .split(/\r\n|\n|\r|\. /)
+      .filter(step => step.trim() !== '' && step.trim().length > 10);
   };
 
-  const handleSearch = () => buscarAlimentos(searchTerm);
+  const abrirVideo = (videoUrl) => {
+    if (videoUrl) {
+      Linking.openURL(videoUrl);
+    } else {
+      Alert.alert('Info', 'Vídeo não disponível para esta receita');
+    }
+  };
 
-  const formatarNutriente = (valor) => {
-    if (valor === undefined || valor === null) return 'N/A';
-    return typeof valor === 'number' ? valor.toFixed(1) : valor;
+  const abrirFonte = (sourceUrl) => {
+    if (sourceUrl) {
+      Linking.openURL(sourceUrl);
+    } else {
+      Alert.alert('Info', 'Fonte original não disponível');
+    }
   };
 
   const renderItem = ({ item }) => (
     <Pressable
-      style={({ pressed }) => [styles.cardAlimento, pressed && { opacity: 0.8 }]}
-      onPress={() => navigation.navigate('DetalhesAlimento', { alimento: item })}
+      style={({ pressed }) => [styles.cardAlimento, pressed && styles.cardPressed]}
+      onPress={() => fetchRecipeDetails(item)}
     >
       <View style={styles.cardHeader}>
-        <View style={styles.imagemPlaceholder}>
-          <Ionicons name="nutrition" size={30} color="#059669" />
-        </View>
+        {item.image ? (
+          <Image
+            source={{ uri: item.image }}
+            style={styles.imagemAlimento}
+            resizeMode="cover"
+          />
+        ) : (
+          <View style={styles.imagemPlaceholder}>
+            <Ionicons name="restaurant" size={30} color="#059669" />
+          </View>
+        )}
 
         <View style={styles.infoBasica}>
           <Text style={styles.nomeAlimento} numberOfLines={2}>
-            {item.product_name}
+            {item.title || "Receita sem nome"}
           </Text>
-          <Text style={styles.marcaAlimento}>{item.brands}</Text>
-          {item.category && (
-            <Text style={styles.categoriaAlimento}>{item.category}</Text>
-          )}
+          <Text style={styles.marcaAlimento}>
+            {item.category ? `${item.category}` : "Categoria não especificada"}
+            {item.area ? ` • ${item.area}` : ''}
+          </Text>
+          <Text style={styles.categoriaAlimento}>
+            {item.ingredients ? `${formatarIngredientes(item.ingredients).length} ingredientes` : ""}
+          </Text>
         </View>
       </View>
 
       <View style={styles.infoNutricional}>
         <View style={styles.nutrienteItem}>
-          <Text style={styles.nutrienteLabel}>Calorias</Text>
+          <Text style={styles.nutrienteLabel}>Porções</Text>
           <Text style={styles.nutrienteValue}>
-            {formatarNutriente(item.nutriments?.['energy-kcal_100g'])} kcal
+            {item.servings || '4'}
           </Text>
         </View>
 
         <View style={styles.nutrienteItem}>
-          <Text style={styles.nutrienteLabel}>Carboidratos</Text>
+          <Text style={styles.nutrienteLabel}>Ingredientes</Text>
           <Text style={styles.nutrienteValue}>
-            {formatarNutriente(item.nutriments?.carbohydrates_100g)} g
+            {item.ingredients ? formatarIngredientes(item.ingredients).length : 'N/A'}
           </Text>
         </View>
 
         <View style={styles.nutrienteItem}>
-          <Text style={styles.nutrienteLabel}>Proteínas</Text>
+          <Text style={styles.nutrienteLabel}>Dificuldade</Text>
           <Text style={styles.nutrienteValue}>
-            {formatarNutriente(item.nutriments?.proteins_100g)} g
-          </Text>
-        </View>
-
-        <View style={styles.nutrienteItem}>
-          <Text style={styles.nutrienteLabel}>Gorduras</Text>
-          <Text style={styles.nutrienteValue}>
-            {formatarNutriente(item.nutriments?.fat_100g)} g
+            {item.ingredients ? 
+              (formatarIngredientes(item.ingredients).length <= 5 ? 'Fácil' : 
+               formatarIngredientes(item.ingredients).length <= 10 ? 'Médio' : 'Difícil') 
+              : 'N/A'}
           </Text>
         </View>
       </View>
 
       <View style={styles.cardFooter}>
-        <Text style={styles.infoPorcao}>Valores por 100g • Fonte: {item.brands}</Text>
+        <Text style={styles.infoPorcao}>
+          {item.ingredients ? `Ingredientes: ${formatarIngredientes(item.ingredients).length}` : ''} 
+          • Fonte: TheMealDB
+        </Text>
       </View>
     </Pressable>
   );
@@ -348,18 +301,18 @@ export default function Alimentacao({ navigation }) {
   return (
     <LinearGradient
       colors={isDarkMode ? ['#1E293B', '#334155'] : ['#059669', '#10B981']}
-      style={{ flex: 1 }}
+      style={styles.gradientContainer}
     >
       {/* Header */}
       <View style={styles.header}>
         <Pressable
-          style={({ pressed }) => [styles.backButton, pressed && { opacity: 0.7 }]}
+          style={({ pressed }) => [styles.backButton, pressed && styles.buttonPressed]}
           onPress={() => navigation.goBack()}
         >
           <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
         </Pressable>
 
-        <Text style={styles.titulo}>Buscar Alimentos</Text>
+        <Text style={styles.titulo}>Buscar Receitas</Text>
         <View style={styles.placeholder} />
       </View>
 
@@ -369,7 +322,7 @@ export default function Alimentacao({ navigation }) {
           <Ionicons name="search" size={20} color="#999" style={styles.searchIcon} />
           <TextInput
             style={styles.searchInput}
-            placeholder="Ex: arroz, frango, maçã, banana, pão..."
+            placeholder="Ex: pasta, chicken, salad, cake, soup..."
             placeholderTextColor="#999"
             value={searchTerm}
             onChangeText={setSearchTerm}
@@ -378,7 +331,7 @@ export default function Alimentacao({ navigation }) {
           />
           {searchTerm.length > 0 && (
             <Pressable
-              style={({ pressed }) => [styles.clearButton, pressed && { opacity: 0.7 }]}
+              style={({ pressed }) => [styles.clearButton, pressed && styles.buttonPressed]}
               onPress={() => setSearchTerm('')}
             >
               <Ionicons name="close-circle" size={20} color="#999" />
@@ -387,7 +340,7 @@ export default function Alimentacao({ navigation }) {
         </View>
 
         <Pressable
-          style={({ pressed }) => [styles.searchButton, pressed && { opacity: 0.8 }]}
+          style={({ pressed }) => [styles.searchButton, pressed && styles.buttonPressed]}
           onPress={handleSearch}
           disabled={carregando}
         >
@@ -399,35 +352,47 @@ export default function Alimentacao({ navigation }) {
         </Pressable>
       </View>
 
+      {/* Aviso sobre termos em inglês */}
+      <View style={styles.warningContainer}>
+        <Ionicons name="information-circle" size={20} color="#F59E0B" />
+        <Text style={styles.warningText}>
+          Digite termos em inglês para melhores resultados
+        </Text>
+      </View>
+
       {/* Conteúdo */}
       <View style={styles.content}>
         {carregando ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color="#059669" />
-            <Text style={styles.loadingText}>Buscando alimentos...</Text>
+            <Text style={styles.loadingText}>Buscando receitas...</Text>
           </View>
-        ) : pesquisaRealizada && alimentos.length === 0 ? (
+        ) : pesquisaRealizada && receitas.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <Ionicons name="search-outline" size={60} color="#999" />
-            <Text style={styles.emptyText}>Nenhum alimento encontrado</Text>
+            <Ionicons name="restaurant-outline" size={60} color="#999" />
+            <Text style={styles.emptyText}>Nenhuma receita encontrada</Text>
             <Text style={styles.emptySubtext}>
-              Tente: arroz, frango, maçã, banana, pão, leite, ovo, etc.
+              Tente termos em inglês: pasta, chicken, salad, cake, soup, pizza, etc.
             </Text>
           </View>
         ) : (
           <FlatList
-            data={alimentos}
+            data={receitas}
             renderItem={renderItem}
-            keyExtractor={(item, index) => item.id || `alimento-${index}`}
+            keyExtractor={(item) => `receita-${item.id}`}
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.listContainer}
+            contentContainerStyle={[
+              styles.listContainer,
+              keyboardVisible && styles.keyboardOpenList,
+            ]}
             ListHeaderComponent={
-              alimentos.length > 0 && (
+              receitas.length > 0 && (
                 <Text style={styles.resultadosText}>
-                  {alimentos.length} alimento(s) encontrado(s)
+                  {receitas.length} receita(s) encontrada(s) via TheMealDB
                 </Text>
               )
             }
+            keyboardShouldPersistTaps="handled"
           />
         )}
 
@@ -436,11 +401,160 @@ export default function Alimentacao({ navigation }) {
           <View style={styles.dicaContainer}>
             <Ionicons name="bulb-outline" size={24} color="#F59E0B" />
             <Text style={styles.dicaText}>
-              Digite alimentos em português como: arroz, frango, maçã, banana
+              Digite termos culinários em inglês: pasta, chicken, salad, cake, soup, pizza, etc.
             </Text>
           </View>
         )}
       </View>
+
+      {/* Modal de Detalhes da Receita */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            {detailsLoading ? (
+              <View style={styles.modalLoading}>
+                <ActivityIndicator size="large" color="#059669" />
+                <Text style={styles.modalLoadingText}>
+                  Carregando receita...
+                </Text>
+              </View>
+            ) : recipeDetails ? (
+              <ScrollView style={styles.modalScrollView}>
+                <View style={styles.modalHeader}>
+                  <Text style={styles.modalTitle} numberOfLines={2}>
+                    {recipeDetails.title || "Receita sem nome"}
+                  </Text>
+                  <Pressable
+                    style={styles.closeButton}
+                    onPress={() => setModalVisible(false)}
+                  >
+                    <Text style={styles.closeButtonText}>✕</Text>
+                  </Pressable>
+                </View>
+
+                {recipeDetails.image && (
+                  <Image
+                    source={{ uri: recipeDetails.image }}
+                    style={styles.modalImage}
+                    resizeMode="cover"
+                  />
+                )}
+
+                <View style={styles.detailsSection}>
+                  <Text style={styles.sectionTitle}>Informações da Receita</Text>
+                  
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>Categoria:</Text>
+                    <Text style={styles.detailValue}>
+                      {recipeDetails.category || 'Não especificada'}
+                    </Text>
+                  </View>
+
+                  {recipeDetails.area && (
+                    <View style={styles.detailRow}>
+                      <Text style={styles.detailLabel}>Culinária:</Text>
+                      <Text style={styles.detailValue}>
+                        {recipeDetails.area}
+                      </Text>
+                    </View>
+                  )}
+
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>Porções:</Text>
+                    <Text style={styles.detailValue}>
+                      {recipeDetails.servings || '4'}
+                    </Text>
+                  </View>
+
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>Dificuldade:</Text>
+                    <Text style={styles.detailValue}>
+                      {recipeDetails.ingredients ? 
+                        (formatarIngredientes(recipeDetails.ingredients).length <= 5 ? 'Fácil' : 
+                         formatarIngredientes(recipeDetails.ingredients).length <= 10 ? 'Médio' : 'Difícil') 
+                        : 'Não disponível'}
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.detailsSection}>
+                  <Text style={styles.sectionTitle}>Ingredientes</Text>
+                  {recipeDetails.ingredients ? (
+                    formatarIngredientes(recipeDetails.ingredients).map((ingrediente, index) => (
+                      <View key={index} style={styles.ingredientItem}>
+                        <Text style={styles.ingredientBullet}>•</Text>
+                        <Text style={styles.ingredientText}>{ingrediente.trim()}</Text>
+                      </View>
+                    ))
+                  ) : (
+                    <Text style={styles.noDataText}>Ingredientes não disponíveis</Text>
+                  )}
+                </View>
+
+                <View style={styles.detailsSection}>
+                  <Text style={styles.sectionTitle}>Instruções</Text>
+                  {recipeDetails.instructions ? (
+                    formatarInstrucoes(recipeDetails.instructions).map((instrucao, index) => (
+                      <View key={index} style={styles.instructionItem}>
+                        <Text style={styles.instructionStep}>{index + 1}.</Text>
+                        <Text style={styles.instructionText}>{instrucao.trim()}</Text>
+                      </View>
+                    ))
+                  ) : (
+                    <Text style={styles.noDataText}>Instruções não disponíveis</Text>
+                  )}
+                </View>
+
+                {/* Botões de ação */}
+                <View style={styles.actionsContainer}>
+                  {recipeDetails.video && (
+                    <Pressable
+                      style={[styles.actionButton, styles.videoButton]}
+                      onPress={() => abrirVideo(recipeDetails.video)}
+                    >
+                      <Ionicons name="play-circle" size={20} color="#FFFFFF" />
+                      <Text style={styles.actionButtonText}>Assistir Vídeo</Text>
+                    </Pressable>
+                  )}
+                  
+                  {recipeDetails.source && (
+                    <Pressable
+                      style={[styles.actionButton, styles.sourceButton]}
+                      onPress={() => abrirFonte(recipeDetails.source)}
+                    >
+                      <Ionicons name="link" size={20} color="#FFFFFF" />
+                      <Text style={styles.actionButtonText}>Fonte Original</Text>
+                    </Pressable>
+                  )}
+                </View>
+
+                <View style={styles.dataSourceInfo}>
+                  <Text style={styles.dataSourceText}>
+                    🍳 Receita fornecida pela TheMealDB API
+                  </Text>
+                </View>
+              </ScrollView>
+            ) : (
+              <View style={styles.modalLoading}>
+                <Text style={styles.errorText}>
+                  Erro ao carregar informações da receita.
+                </Text>
+                <Pressable
+                  style={styles.retryButton}
+                  onPress={() => setModalVisible(false)}
+                >
+                  <Text style={styles.retryButtonText}>Fechar</Text>
+                </Pressable>
+              </View>
+            )}
+          </View>
+        </View>
+      </Modal>
     </LinearGradient>
   );
 }

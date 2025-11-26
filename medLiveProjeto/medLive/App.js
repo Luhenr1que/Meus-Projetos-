@@ -27,7 +27,7 @@ export default function App() {
           <AudioProvider>
             <NavigationContainer>
               <Stack.Navigator 
-                initialRouteName="MapaMercados"
+                initialRouteName="Home"
                 screenOptions={{ headerShown: false }}
               >
                 <Stack.Screen name="Login" component={Login} />

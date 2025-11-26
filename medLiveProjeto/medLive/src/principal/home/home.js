@@ -3,7 +3,6 @@ import {
     View, 
     ScrollView, 
     Text, 
-    Pressable, 
     Image, 
     Dimensions, 
     TouchableOpacity,
@@ -18,7 +17,7 @@ import axios from 'axios';
 import { useTheme } from '../../../themeContext';
 import getStyles from './style';
 import { Ionicons, MaterialCommunityIcons, FontAwesome6, FontAwesome5, MaterialIcons } from '@expo/vector-icons';
-import { useApi } from '../../../crud';
+import { useApi, STORAGE_URL } from '../../../crud'; // Importe STORAGE_URL
 
 const { width } = Dimensions.get('window');
 
@@ -31,8 +30,10 @@ export default function Home({ navigation }) {
     const [modalPerfilVisivel, setModalPerfilVisivel] = useState(false);
     const [carregandoPerfil, setCarregandoPerfil] = useState(false);
     const [salvando, setSalvando] = useState(false);
+    const [fotoPerfil, setFotoPerfil] = useState(null); // Estado para a foto
+    const [dadosCompletos, setDadosCompletos] = useState(null); // Estado para dados completos
 
-    const { logoutPaciente, getPaciente, updatePaciente } = useApi();
+    const { logoutPaciente, getPaciente, updatePaciente, getUserData } = useApi();
 
     // Estado para os dados do perfil
     const [dadosPerfil, setDadosPerfil] = useState({
@@ -44,6 +45,23 @@ export default function Home({ navigation }) {
         cidade: '',
         estado: ''
     });
+
+    // Carregar foto do perfil
+    const carregarFotoPerfil = async () => {
+        try {
+            const userData = await getUserData();
+            if (userData && userData.fotoPerfil) {
+                const fotoUrl = `${STORAGE_URL}/${userData.fotoPerfil}`;
+                console.log('📸 Carregando foto:', fotoUrl);
+                setFotoPerfil(fotoUrl);
+            } else {
+                setFotoPerfil(null);
+            }
+        } catch (error) {
+            console.log('Erro ao carregar foto:', error);
+            setFotoPerfil(null);
+        }
+    };
 
     const carregarTodasFrases = async () => {
         try {
@@ -116,6 +134,7 @@ export default function Home({ navigation }) {
             
             if (paciente) {
                 console.log('Dados do paciente carregados:', paciente);
+                setDadosCompletos(paciente); // Salva dados completos
                 setDadosPerfil({
                     nome: paciente.nomePaciente || '',
                     email: paciente.emailPaciente || '',
@@ -125,6 +144,15 @@ export default function Home({ navigation }) {
                     cidade: paciente.cidade || '',
                     estado: paciente.estado || ''
                 });
+
+                // Carrega a foto se existir
+                if (paciente.fotoPerfil) {
+                    const fotoUrl = `${STORAGE_URL}/${paciente.fotoPerfil}`;
+                    console.log('📸 Foto do perfil:', fotoUrl);
+                    setFotoPerfil(fotoUrl);
+                } else {
+                    setFotoPerfil(null);
+                }
             }
         } catch (error) {
             console.log('Erro ao carregar perfil:', error);
@@ -153,7 +181,10 @@ export default function Home({ navigation }) {
             const resultado = await updatePaciente(dadosPerfil);
             
             if (resultado) {
+                // Recarrega a foto após salvar
+                await carregarFotoPerfil();
                 setModalPerfilVisivel(false);
+                Alert.alert('Sucesso', 'Perfil atualizado com sucesso!');
             }
             
         } catch (error) {
@@ -185,8 +216,10 @@ export default function Home({ navigation }) {
         });
     };
 
+    // Efeito para carregar a foto quando o componente montar
     useEffect(() => {
         carregarTodasFrases();
+        carregarFotoPerfil(); // Carrega a foto ao iniciar
         
         // Recarregar a cada 6 horas
         const intervalo = setInterval(() => {
@@ -255,13 +288,20 @@ export default function Home({ navigation }) {
         },
         {
             id: 9,
+            nome: 'Mercados Próximos',
+            color: ['#15803d', '#22c55e'],
+            icone: <MaterialCommunityIcons name='store-marker' size={45} color="#FFFFFF" />,
+            tela: 'MapaMercados'
+        },
+        {
+            id: 10,
             nome: 'Emergência',
             color: ['#DC2626', '#EF4444'],
             icone: <Ionicons name='alert-circle' size={45} color="#FFFFFF" />,
             acao: 'emergencia'
         },
         {
-            id: 10,
+            id: 11,
             nome: 'Meu Perfil',
             color: ['#C026D3', '#D946EF'],
             icone: <Ionicons name='person' size={45} color="#FFFFFF" />,
@@ -311,27 +351,68 @@ export default function Home({ navigation }) {
             colors={isDarkMode ? ['#1E293B', '#334155'] : ['#6247AA', '#856BCC']}
             style={{ flex: 1 }}
         >
-            {/* Navbar */}
+            {/* Navbar com foto de perfil */}
             <View style={styles.navbar}>
                 <View style={styles.logoContainer}>
                     <Text style={styles.logoText}>Saúde+</Text>
                 </View>
 
-                <TouchableOpacity
-                    style={styles.menuButton}
-                    onPress={toggleMenu}
-                >
-                    <Ionicons
-                        name={menuAberto ? "close" : "menu"}
-                        size={28}
-                        color="#FFFFFF"
-                    />
-                </TouchableOpacity>
+                <View style={styles.navbarRight}>
+                    {/* Foto de perfil pequena */}
+                    {fotoPerfil ? (
+                        <TouchableOpacity 
+                            style={styles.fotoPerfilPequena}
+                            onPress={abrirModalPerfil}
+                        >
+                            <Image 
+                                source={{ uri: fotoPerfil }} 
+                                style={styles.fotoPerfilImagem}
+                            />
+                        </TouchableOpacity>
+                    ) : (
+                        <TouchableOpacity 
+                            style={styles.fotoPerfilPlaceholder}
+                            onPress={abrirModalPerfil}
+                        >
+                            <Ionicons name="person" size={20} color="#FFFFFF" />
+                        </TouchableOpacity>
+                    )}
+
+                    <TouchableOpacity
+                        style={styles.menuButton}
+                        onPress={toggleMenu}
+                    >
+                        <Ionicons
+                            name={menuAberto ? "close" : "menu"}
+                            size={28}
+                            color="#FFFFFF"
+                        />
+                    </TouchableOpacity>
+                </View>
             </View>
 
             {/* Menu suspenso */}
             {menuAberto && (
                 <View style={styles.menuDropdown}>
+                    <View style={styles.menuHeader}>
+                        {fotoPerfil ? (
+                            <Image 
+                                source={{ uri: fotoPerfil }} 
+                                style={styles.fotoPerfilMenu}
+                            />
+                        ) : (
+                            <View style={styles.fotoPerfilMenuPlaceholder}>
+                                <Ionicons name="person" size={30} color="#FFFFFF" />
+                            </View>
+                        )}
+                        <Text style={styles.menuNome}>
+                            {dadosPerfil.nome || 'Usuário'}
+                        </Text>
+                        <Text style={styles.menuEmail}>
+                            {dadosPerfil.email || ''}
+                        </Text>
+                    </View>
+
                     <TouchableOpacity
                         style={styles.menuItem}
                         onPress={() => abrirModalPerfil()}
@@ -358,7 +439,7 @@ export default function Home({ navigation }) {
 
                     <TouchableOpacity
                         style={styles.menuItem}
-                        onPress={() => logoutPaciente()}
+                        onPress={() => {logoutPaciente(), navigation.replace('Login');}}
                     >
                         <Ionicons name="log-out" size={20} color="#FFFFFF" />
                         <Text style={styles.menuItemText}>Sair</Text>
@@ -410,7 +491,7 @@ export default function Home({ navigation }) {
                 </View>
             </ScrollView>
 
-            {/* Modal de Perfil */}
+            {/* Modal de Perfil - ATUALIZADO para mostrar foto */}
             <Modal
                 visible={modalPerfilVisivel}
                 animationType="slide"
@@ -419,9 +500,21 @@ export default function Home({ navigation }) {
             >
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalContainer}>
-                        {/* Header do Modal */}
+                        {/* Header do Modal com Foto */}
                         <View style={styles.modalHeader}>
-                            <Text style={styles.modalTitulo}>Meu Perfil</Text>
+                            <View style={styles.modalFotoContainer}>
+                                {fotoPerfil ? (
+                                    <Image 
+                                        source={{ uri: fotoPerfil }} 
+                                        style={styles.modalFotoPerfil}
+                                    />
+                                ) : (
+                                    <View style={styles.modalFotoPlaceholder}>
+                                        <Ionicons name="person" size={40} color="#6247AA" />
+                                    </View>
+                                )}
+                                <Text style={styles.modalTitulo}>Meu Perfil</Text>
+                            </View>
                             <TouchableOpacity 
                                 style={styles.modalFechar}
                                 onPress={fecharModalPerfil}
@@ -439,6 +532,16 @@ export default function Home({ navigation }) {
                                 </View>
                             ) : (
                                 <>
+                                    {/* Informações da Foto */}
+                                    <View style={styles.fotoInfoContainer}>
+                                        <Text style={styles.fotoInfoText}>
+                                            {fotoPerfil 
+                                                ? 'Foto de perfil carregada' 
+                                                : 'Nenhuma foto de perfil'
+                                            }
+                                        </Text>
+                                    </View>
+
                                     {/* Campo Nome */}
                                     <View style={styles.campoContainer}>
                                         <Text style={styles.campoLabel}>Nome Completo</Text>
@@ -451,7 +554,7 @@ export default function Home({ navigation }) {
                                         />
                                     </View>
 
-                                    {/* Campo Email */}
+                                    {/* ... outros campos mantidos iguais ... */}
                                     <View style={styles.campoContainer}>
                                         <Text style={styles.campoLabel}>Email</Text>
                                         <TextInput
@@ -465,7 +568,6 @@ export default function Home({ navigation }) {
                                         />
                                     </View>
 
-                                    {/* Campo Telefone */}
                                     <View style={styles.campoContainer}>
                                         <Text style={styles.campoLabel}>Telefone</Text>
                                         <TextInput
@@ -478,7 +580,6 @@ export default function Home({ navigation }) {
                                         />
                                     </View>
 
-                                    {/* Campo Endereço */}
                                     <View style={styles.campoContainer}>
                                         <Text style={styles.campoLabel}>Endereço</Text>
                                         <TextInput
@@ -490,7 +591,6 @@ export default function Home({ navigation }) {
                                         />
                                     </View>
 
-                                    {/* Campo Cidade */}
                                     <View style={styles.campoContainer}>
                                         <Text style={styles.campoLabel}>Cidade</Text>
                                         <TextInput
@@ -502,7 +602,6 @@ export default function Home({ navigation }) {
                                         />
                                     </View>
 
-                                    {/* Campo Estado */}
                                     <View style={styles.campoContainer}>
                                         <Text style={styles.campoLabel}>Estado</Text>
                                         <TextInput

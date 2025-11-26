@@ -11,8 +11,8 @@ import { useApi } from '../../../../crud';
 export default function Cadastro4({ navigation }) {
   const { isDarkMode } = useTheme();
   const styles = getStyles(isDarkMode);
-  const { dadosCadastro } = useCadastro();
-  const { atualizarFotoPerfil } = useApi();
+  const { dadosCadastro, limparDados } = useCadastro();
+  const { updateFotoPerfil } = useApi(); // CORREÇÃO: use updateFotoPerfil (não atualizarFotoPerfil)
 
   const [imagem, setImagem] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
@@ -24,7 +24,10 @@ export default function Cadastro4({ navigation }) {
   // Câmera
   const abrirCamera = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== 'granted') return Alert.alert('Permissão negada', 'Precisamos acessar a câmera');
+    if (status !== 'granted') {
+      Alert.alert('Permissão negada', 'Precisamos acessar a câmera');
+      return;
+    }
 
     const result = await ImagePicker.launchCameraAsync({
       allowsEditing: true,
@@ -41,7 +44,10 @@ export default function Cadastro4({ navigation }) {
   // Galeria
   const abrirGaleria = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') return Alert.alert('Permissão negada', 'Precisamos acessar a galeria');
+    if (status !== 'granted') {
+      Alert.alert('Permissão negada', 'Precisamos acessar a galeria');
+      return;
+    }
 
     const result = await ImagePicker.launchImageLibraryAsync({
       allowsEditing: true,
@@ -64,34 +70,56 @@ export default function Cadastro4({ navigation }) {
     try {
       setLoading(true);
 
-      // Se não tem imagem, finaliza sem foto
-      if (!imagem?.uri) {
+      // Se tem imagem, tenta enviar a foto
+      if (imagem?.uri) {
+        console.log('📤 Enviando foto...', {
+          idPaciente: dadosCadastro.idPaciente,
+          uri: imagem.uri
+        });
+
+        // CORREÇÃO: Use updateFotoPerfil corretamente
+        await updateFotoPerfil(imagem.uri);
+        
+        Alert.alert('Sucesso', 'Cadastro finalizado com foto!');
+      } else {
         Alert.alert('Sucesso', 'Cadastro finalizado sem foto!');
-        navigation.navigate('Login');
-        return;
       }
 
-      console.log('📤 Enviando foto...', {
-        idPaciente: dadosCadastro.idPaciente,
-        filename: `perfil_${dadosCadastro.idPaciente}_${Date.now()}.jpg`
-      });
-
-      // Usa apenas o método atualizarFotoPerfil do contexto
-      await atualizarFotoPerfil(imagem.uri);
+      // Limpa os dados do contexto de cadastro
+      limparDados();
       
-      Alert.alert('Sucesso', 'Cadastro finalizado com foto!');
-      navigation.navigate('Login');
+      // Navega para login
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Login' }],
+      });
 
     } catch (error) {
       console.error('❌ Erro ao salvar foto:', error);
+      
+      // Se deu erro na foto mas o cadastro já foi feito, permite continuar
       Alert.alert(
         'Aviso', 
-        'Foto não pôde ser salva, mas o cadastro foi finalizado. Você pode adicionar a foto depois.',
-        [{ text: 'OK', onPress: () => navigation.navigate('Login') }]
+        error.response?.data?.error || 'Foto não pôde ser salva, mas o cadastro foi finalizado. Você pode adicionar a foto depois.',
+        [{ 
+          text: 'OK', 
+          onPress: () => {
+            limparDados();
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'Login' }],
+            });
+          } 
+        }]
       );
     } finally {
       setLoading(false);
     }
+  };
+
+  // Remover foto selecionada
+  const removerFoto = () => {
+    setImagem(null);
   };
 
   return (
@@ -104,19 +132,33 @@ export default function Cadastro4({ navigation }) {
           <Text style={styles.titulo}>Foto de Perfil</Text>
           <Text style={styles.subtitle}>Adicione uma foto para seu perfil (Opcional)</Text>
 
-          <TouchableOpacity style={styles.fotoContainer} onPress={selecionarImagem}>
+          <View style={styles.fotoContainer}>
             {imagem ? (
-              <Image source={{ uri: imagem.uri }} style={styles.fotoSelecionada} />
+              <View style={styles.fotoComContainer}>
+                <Image source={{ uri: imagem.uri }} style={styles.fotoSelecionada} />
+                <TouchableOpacity style={styles.botaoRemoverFoto} onPress={removerFoto}>
+                  <Ionicons name="close-circle" size={24} color="#FF3B30" />
+                </TouchableOpacity>
+              </View>
             ) : (
-              <LinearGradient
-                colors={isDarkMode ? ['#444', '#555'] : ['#999', '#aaa']}
-                style={styles.fotoPlaceholder}
-              >
-                <Ionicons name="camera-outline" size={60} color="#fff" />
-                <Text style={styles.fotoPlaceholderText}>Adicionar Foto</Text>
-              </LinearGradient>
+              <TouchableOpacity onPress={selecionarImagem}>
+                <LinearGradient
+                  colors={isDarkMode ? ['#444', '#555'] : ['#999', '#aaa']}
+                  style={styles.fotoPlaceholder}
+                >
+                  <Ionicons name="camera-outline" size={60} color="#fff" />
+                  <Text style={styles.fotoPlaceholderText}>Adicionar Foto</Text>
+                </LinearGradient>
+              </TouchableOpacity>
             )}
-          </TouchableOpacity>
+          </View>
+
+          <Text style={styles.observacao}>
+            {imagem 
+              ? 'Foto selecionada! Toque na foto para alterar.' 
+              : 'Toque no círculo acima para adicionar uma foto (opcional).'
+            }
+          </Text>
 
           <TouchableOpacity
             onPress={finalizarCadastro}
@@ -128,7 +170,7 @@ export default function Cadastro4({ navigation }) {
                 <ActivityIndicator color="#fff" />
               ) : (
                 <Text style={styles.textBtn}>
-                  {imagem ? 'Finalizar com Foto' : 'Cadastrar sem Foto'}
+                  {imagem ? 'Finalizar com Foto' : 'Finalizar Cadastro'}
                 </Text>
               )}
             </LinearGradient>
@@ -158,14 +200,17 @@ export default function Cadastro4({ navigation }) {
           <View style={styles.modalContainer}>
             <View style={styles.modalContent}>
               <Text style={styles.modalTitle}>Escolher Foto</Text>
+              
               <TouchableOpacity style={styles.modalOption} onPress={abrirCamera}>
                 <Ionicons name="camera" size={24} color="#6247AA" />
                 <Text style={styles.modalOptionText}>Tirar Foto</Text>
               </TouchableOpacity>
+              
               <TouchableOpacity style={styles.modalOption} onPress={abrirGaleria}>
                 <Ionicons name="images" size={24} color="#6247AA" />
                 <Text style={styles.modalOptionText}>Escolher da Galeria</Text>
               </TouchableOpacity>
+              
               <TouchableOpacity style={styles.modalCancel} onPress={() => setModalVisible(false)}>
                 <Text style={styles.modalCancelText}>Cancelar</Text>
               </TouchableOpacity>
